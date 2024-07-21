@@ -4,7 +4,7 @@ import cv2
 import os
 # for img and etc
 # Load the image using Pillow
-img = Image.open('preview.jpg')
+img = Image.open('train_pic/preview.jpg')
 
 # Convert to a NumPy array (still in RGB format)
 img = np.array(img)
@@ -21,7 +21,7 @@ cv2.waitKey(2000)
 cv2.destroyAllWindows()
 
 # Check if the script file exists
-if os.path.exists('OpenCV_test_pic.py'):
+if os.path.exists('train_pic/OpenCV_test_pic.py'):
     print("成功開啟")
 else:
     print("無法開啟")
