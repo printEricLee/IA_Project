@@ -22,4 +22,4 @@ def load_images(folder, label):
             data.append(img)
             labels.append(label)
 
-load_images(<data name> , <number of data>)
+# load_images(<data name> , <number of data>)
