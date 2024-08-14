@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>圖像檢測</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="static/index.css" type="text/css">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+</head>
+
+<body>
+  <br />
+
+  <div id="header">
+    <span style="font-size: 30px; cursor: pointer" onclick="openMenu()"> &#9776; 選單 </span>
+  </div>
+
+  <div class="setMenu" id="menu">
+    <a href="javascript:void(0)" class="close" onclick="closeMenu()">&times;</a>
+    <a href="{{ url_for('index') }}">首頁</a>
+    <a href="{{ url_for('liveDetect') }}">實時檢測</a>
+    <a href="{{ url_for('uploadVideo') }}">影片檢測</a>
+    <a href="{{ url_for('objectDetection') }}">圖像檢測</a>
+  </div>
+
+  <div id="OD"> <!-- OD -->
+    <center>
+      <h1>圖像檢測</h1>
+
+      <hr />
+
+      <h2>請上傳所需檢測的<u><b><i>圖像</i></b></u></h2>
+
+      <form action="/imgpred" method="post" enctype="multipart/form-data">
+        <input type="file" name="image" accept="image/*" required>
+        <button type="submit" onclick="confirm('正在收集您的圖片並上傳中...')">上傳</button>
+      </form>
+
+      {% if image_path %}
+
+        <h2>物件檢測結果</h2>
+
+        <!--顯示預測圖像-->
+        <img src="{{ image_pred1 }}" alt="模型 1 結果" width="30%">
+        <img src="{{ image_pred2 }}" alt="模型 2 結果" width="30%">
+
+        <h1>模型 1 總結</h1>
+          <ol>{{ summary1 }}</ol>
+        <h1>模型 2 總結</h1>
+          <ol>{{ summary2 }}</ol>
+		  
+		{% if alert_message %}
+            <p style="color: red;">{{ alert_message }}</p>
+        {% endif %}
+
+      {% endif %}
+	  
+    <script>
+        // 延遲警告以確保圖像先加載
+        window.onload = function() {
+            {% if alert_message %}
+                setTimeout(function() {
+                    alert("{{ alert_message }}");
+                }, 1000); // 1秒延遲
+            {% endif %}
+        };
+    </script>
+    </center>
+  </div>
+
+  <script>
+    function openMenu() {
+      document.getElementById("menu").style.width = "250px";
+    }
+
+    function closeMenu() {
+      document.getElementById("menu").style.width = "0";
+    }
+  </script>
+</body>
+
+</html>

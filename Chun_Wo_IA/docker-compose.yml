@@ -1,0 +1,12 @@
+services:
+ chun_wo_ia:
+    platform: linux/amd64
+    build:
+      context: ./app
+      dockerfile: dockerfile
+
+    container_name: chun_wo_ia
+    ports:
+      - 8080:8080
+    volumes:
+      - ./app:/app

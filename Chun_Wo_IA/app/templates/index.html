@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="./index.css" type="text/css">
+	<title>運輸物品檢測器</title>
+
+	<script>
+		/*選單*/
+		function openMenu() {
+			document.getElementById("menu").style.width = "250px";
+		}
+
+		function closeMenu() {
+			document.getElementById("menu").style.width = "0";
+		}
+	</script>
+
+</head>
+
+<body>
+	<br />
+	<div id="header">
+		<span style="font-size:30px;cursor:pointer" onclick="openMenu()">&#9776; 選單</span>
+	</div>
+	<div class="setMenu" id="menu">
+		<a href="javascript:void(0)" class="close" onclick="closeMenu()">&times;</a>
+		<a href="{{ url_for('index') }}">首頁</a>
+		<a href="{{ url_for('liveDetect') }}">實時檢測</a>
+		<a href="{{ url_for('uploadVideo') }}">影片檢測</a>
+		<a href="{{ url_for('objectDetection') }}">圖像檢測</a>
+	</div>
+
+	<center>
+		<h1>自卸卡車運輸物品檢測器</h1>
+
+		<hr>
+
+		<table border="2" width="800" cellspacing="5" cellpadding="20" align="center">
+			<caption><b>主要功能</b></caption>
+			<tr>
+				<th>
+				<a href="{{ url_for('liveDetect') }}">
+				<img src="{{ url_for('static', filename='exampleOfLiveDetect.png') }}" alt="My Image" 
+				width= 400>
+				</a>
+				</th>
+				
+				<th>
+				<a href="{{ url_for('uploadVideo') }}">
+				<img src="{{ url_for('static', filename='exampleOfVideoDetect.png') }}" alt="My Image" 
+				width= 400>
+				</a>
+				</th>
+				
+				<th>
+				<a href="{{ url_for('objectDetection') }}">
+				<img src="{{ url_for('static', filename='exampleOfObjectDetect.png') }}" alt="My Image" 
+				width= 400>
+				</a>
+				</th>
+			</tr>
+			<tr>
+				<th><a href="{{ url_for('liveDetect') }}">實時檢測</a></th>
+				<th><a href="{{ url_for('uploadVideo') }}">影片檢測</a></th>
+				<th><a href="{{ url_for('objectDetection') }}">圖像檢測</a></th>
+			</tr>
+			<tr>
+				<td>
+					<h6>使用您的手機相機展示產品以進行預測（開發中）</h6>
+				</td>
+				<td>
+					<h6>上傳您的影片到網絡，它將使用模型進行預測（開發中）</h6>
+				</td>
+				<td>
+					<h6>上傳您的圖片到網絡，它將使用模型進行預測</h6>
+				</td>
+			</tr>
+		</table>
+
+		<h2>如何使用？</h2>
+		<table>
+			<tr>
+				<td><p>1. 選擇所需的檢測方法</p></td>
+			</tr>
+			<tr>
+				<td><p>2. 按下按鈕以打開相機/上傳圖片或影片</p></td>
+			</tr>
+			<tr>
+				<td><p>3. 然後獲得結果</p></td>
+			</tr>
+		</table>
+
+		<p>
+		<h3>簡單！方便！輕鬆！</h3>
+		</p>
+
+	</center>
+
+</body>
+
+</html>

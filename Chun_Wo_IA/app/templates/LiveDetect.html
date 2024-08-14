@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+
+<head>
+    <title>實時檢測</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="static/index.css" type="text/css">
+    <style>
+        #video-container {
+            width: 100%;
+            max-width: 600px; /* 可選的最大寬度 */
+            margin: auto;
+        }
+
+        #live-video {
+            width: 100%;
+            height: auto;
+            display: none; /* 初始隱藏實時視頻 */
+        }
+
+    </style>
+</head>
+
+<body>
+    <br />
+    <br />
+
+    <center>
+        <h1>實時檢測</h1>
+    </center>
+
+    <hr />
+
+    <center>
+        <p>此頁面用於即時檢測</p>
+        <p>請將相機指向需要檢測的地方</p>
+    </center>
+
+    <hr />
+
+    <div id="video-container">
+        <video id="live-video" autoplay playsinline></video>
+    </div>
+
+    <div>
+        <center>
+            <button id="start-detect">開始實時檢測</button>
+            <hr>
+            <button id="shop-detect">停止檢測結果</button>
+        </center>
+
+        <script>
+            document.getElementById("start-detect").addEventListener("click", function () {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(function(stream) {
+                        const liveVideo = document.getElementById("live-video");
+                        liveVideo.srcObject = stream; // Set the video stream
+                        liveVideo.style.display = "block"; // Show the live video
+                        this.style.display = "none"; // Hide the button
+                    })
+                    .catch(function(error) {
+                        console.error("無法訪問相機: ", error);
+                    });
+            });
+
+            document.getElementById("shop-detect").addEventListener("click", function () {
+                const liveVideo = document.getElementById("live-video");
+                liveVideo.style.display = "none"; // Hide the live video
+                document.getElementById("start-detect").style.display = "block"; // Show start button
+                liveVideo.srcObject = null; // Clear the video stream
+            });
+        </script>
+
+        <hr>
+    </div>
+
+    <br />
+
+    <div id="header">
+        <span style="font-size: 30px; cursor: pointer" onclick="openMenu()">
+            &#9776; 選單
+        </span>
+    </div>
+    <div class="setMenu" id="menu">
+        <a href="javascript:void(0)" class="close" onclick="closeMenu()">&times;</a>
+        <a href="{{ url_for('index') }}">首頁</a>
+        <a href="{{ url_for('liveDetect') }}">實時檢測</a>
+        <a href="{{ url_for('uploadVideo') }}">影片檢測</a>
+        <a href="{{ url_for('objectDetection') }}">圖像檢測</a>
+    </div>
+
+    <script>
+        function openMenu() {
+            document.getElementById("menu").style.width = "250px";
+        }
+
+        function closeMenu() {
+            document.getElementById("menu").style.width = "0";
+        }
+    </script>
+</body>
+
+</html>

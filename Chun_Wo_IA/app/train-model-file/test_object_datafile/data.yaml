@@ -1,0 +1,15 @@
+names:
+- dirt
+- rubblish
+- stone
+- wood
+nc: 4
+roboflow:
+  license: Public Domain
+  project: object-jmptx
+  url: https://universe.roboflow.com/work-place-6wdsa/object-jmptx/dataset/1
+  version: 1
+  workspace: work-place-6wdsa
+test: C:\Users\xyxz5\Desktop\model_train\object--1\test\images
+train: C:\Users\xyxz5\Desktop\model_train\object--1\train\images
+val: C:\Users\xyxz5\Desktop\model_train\object--1\valid\images

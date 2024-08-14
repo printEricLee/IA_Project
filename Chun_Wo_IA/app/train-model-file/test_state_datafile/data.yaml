@@ -1,0 +1,15 @@
+names:
+- dry
+- nothing
+- rubblish
+- wet
+nc: 4
+roboflow:
+  license: Private
+  project: stone-dirt
+  url: https://app.roboflow.com/work-place-6wdsa/stone-dirt/5
+  version: 5
+  workspace: work-place-6wdsa
+test: C:\Users\xyxz5\Desktop\model_train\stone-dirt-5\test\images
+train: C:\Users\xyxz5\Desktop\model_train\stone-dirt-5\train\images
+val: C:\Users\xyxz5\Desktop\model_train\stone-dirt-5\valid\images

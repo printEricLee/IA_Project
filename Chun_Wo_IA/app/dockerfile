@@ -1,0 +1,19 @@
+FROM ultralytics/ultralytics
+
+WORKDIR /app
+
+RUN pip install --upgrade pip
+# Yolo
+RUN pip install ultralytics
+RUN pip install opencv-python 
+# Python web
+RUN pip install flask
+RUN pip install Flask-SocketIO
+# numpy [train model]
+RUN pip install numpy 
+# pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+# pip install cuda-python==12.4
+# If necessary, you can go to the "NVIDIA" website to download the driver
+
+# start cmd auto type "python app.py"
+CMD ["python", "app.py"]
