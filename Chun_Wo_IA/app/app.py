@@ -14,7 +14,7 @@ app = Flask(__name__)
 model1 = YOLO('best_v4.pt')
 
 # use model 2 ( predict the state )
-model2 = YOLO('best_stat.pt')
+model2 = YOLO('best2_v2.pt')
 
 
 #====================================================================================#
