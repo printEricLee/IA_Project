@@ -11,7 +11,7 @@ import numpy as np
 app = Flask(__name__)
 
 # use model 1 ( predict what is it )
-model1 = YOLO('best_v3.pt')
+model1 = YOLO('best_v4.pt')
 
 # use model 2 ( predict the state )
 model2 = YOLO('best_stat.pt')

@@ -6,11 +6,11 @@ def worker(): # for cmd
 
 def train_model():
     # Load model ('yolov8m.pt')
-    model = YOLO('yolov8m.pt')
+    model = YOLO('yolov9e.pt')
     model.half()  # Load a pretrained model
 
     # Train the model
-    model.train(data="stone-dirt-5/data.yaml", epochs=30, device=0, batch=13)
+    model.train(data="object--2/data.yaml", epochs=10, device=0, batch=15)
 
 if __name__ == '__main__': # for cmd
     multiprocessing.freeze_support()  # select 
