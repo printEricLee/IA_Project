@@ -28,10 +28,18 @@
             <hr />
 			<h2>請上傳所需檢測的<u><b><i>影片</i></b></u></h2>
 			
-			<form action="/vidpred" method="post" enctype="multipart/form-data">
-				<input type="file" name="file" accept="video/mp4" required>
+      <form action="{{ url_for('vidpred') }}" method="post" enctype="multipart/form-data">
+        <input type="file" name="video" accept="video/*" required>
 				<button type="submit">上傳</button>
 			</form>
+
+      {% if summary1 or summary2 %}
+      <div class="results">
+          <h2>Detection Results</h2>
+          <p><strong>Model 1 Summary:</strong> {{ summary1 if summary1 else 'No results yet.' }}</p>
+          <p><strong>Model 2 Summary:</strong> {{ summary2 if summary2 else 'No results yet.' }}</p>
+      </div>
+      {% endif %}
 		</center>
 	</div>
     <br />

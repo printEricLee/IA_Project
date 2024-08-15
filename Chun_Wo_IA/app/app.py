@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, Response, jsonify, send_from_directory, send_file
+from flask import Flask, render_template, request, redirect, url_for, Response, jsonify, send_from_directory, send_file, session
 from ultralytics import YOLO
 import cv2
 import os
@@ -66,30 +66,6 @@ def index():
             unique_filename = generate_unique_filename(file.filename)
             image_path = os.path.join('static', 'images', unique_filename)
             file.save(image_path)
-
-            # 使用模型1进行推断
-            #results1 = model1(image_path)
-            #result_image1 = results1[0].plot()  # 假设只处理第一个结果
-            #result_path1 = os.path.join('static', 'images', 'result_model1_' + unique_filename)
-            #Image.fromarray(result_image1[..., ::-1]).save(result_path1)
-            
-            # Using model1 for predictions
-            #summary1 = summarize_results(results1)
-            #summary1 = summarize_results_model(results1, "Model 1")
-
-
-
-            # 使用模型2进行推断
-            
-            #results2 = model2(image_path)
-            #result_image2 = results2[0].plot()  # 假设只处理第一个结果
-            #result_path2 = os.path.join('static', 'images', 'result_model2_' + unique_filename)
-            #Image.fromarray(result_image2[..., ::-1]).save(result_path2)
-            
-            
-            # Using model2 for predictions
-            #summary2 = summarize_results(results2)
-            #summary2 = summarize_results_model(results2, "Model 2")
             
             try:
             # Model predictions
@@ -165,6 +141,48 @@ def get_class_name(class_id, model_name):
         
         
 #====================================================================================#
+@app.route('/vidpred', methods=['GET', 'POST'])
+def vidpred():
+    if request.method == 'POST':
+        if 'video' not in request.files:
+            return redirect(request.url)
+
+        file = request.files['video']
+        
+        if file.filename == '':
+            return redirect(request.url)
+
+        if file:
+            unique_filename = generate_unique_filename(file.filename)
+            video_path = os.path.join('static', 'videos', unique_filename)
+            os.makedirs(os.path.dirname(video_path), exist_ok=True)
+            file.save(video_path)
+
+            # Start processing in a background thread
+            threading.Thread(target=process_video, args=(video_path,)).start()
+
+            return redirect(url_for('vidpred'))  # Redirect to show results
+
+    # Display results if available
+    summary1 = session.get('summary1', None)
+    summary2 = session.get('summary2', None)
+    
+    return render_template('UploadVideo.html', summary1=summary1, summary2=summary2)
+
+def process_video(video_path):
+    # Process the video with models
+    results1 = model1(video_path)
+    results2 = model2(video_path)
+
+    # Summarize results
+    summary1 = summarize_results_model(results1, "Model 1")
+    summary2 = summarize_results_model(results2, "Model 2")
+    
+    # Store results in session
+    session['summary1'] = summary1
+    session['summary2'] = summary2
+#====================================================================================#
+
 
 
 @app.route('/live_feed')
