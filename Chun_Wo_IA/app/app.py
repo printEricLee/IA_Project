@@ -69,11 +69,13 @@ def index():
             
             # Model predictions
             # Model 1
-            results1 = model_yolov8(original_image_path)
-            result_image1 = results1[0].plot()
+            gray_image = cv2.imread(original_image_path)
+            gray_image = cv2.cvtColor(gray_image, cv2.COLOR_BGR2GRAY)
+            result1 = model_yolov8(original_image_path)
+            result_image1 = result1[0].plot()
             result_path1 = os.path.join(base_dir, 'results_model1', 'result_model1_' + unique_filename)
             Image.fromarray(result_image1[..., ::-1]).save(result_path1)
-            summary1 = summarize_results_model(results1, "Model 1")
+            summary1 = summarize_results_model(result1, "Model 1")
 
             # Model 2
             gray_image = cv2.imread(original_image_path)
