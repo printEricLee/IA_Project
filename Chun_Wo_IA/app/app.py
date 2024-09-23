@@ -69,13 +69,11 @@ def index():
             
             # Model predictions
             # Model 1
-            gray_image = cv2.imread(original_image_path)
-            gray_image = cv2.cvtColor(gray_image, cv2.COLOR_BGR2GRAY)
-            result1 = model_yolov8(original_image_path)
-            result_image1 = result1[0].plot()
+            results1 = model_yolov8(original_image_path)
+            result_image1 = results1[0].plot()
             result_path1 = os.path.join(base_dir, 'results_model1', 'result_model1_' + unique_filename)
             Image.fromarray(result_image1[..., ::-1]).save(result_path1)
-            summary1 = summarize_results_model(result1, "Model 1")
+            summary1 = summarize_results_model(results1, "Model 1")
 
             # Model 2
             gray_image = cv2.imread(original_image_path)
@@ -127,9 +125,11 @@ def get_class_name(class_id, model_name):
         return class_map_model1.get(class_id, "unknown")
     elif model_name == "Model 2":
         return class_map_model2.get(class_id, "unknown")
-        
+
+#====================================================================================================#        
 # video
 # Global variable to manage processing status
+
 processing = False
 
 def generate_unique_filename(filename):
@@ -137,7 +137,15 @@ def generate_unique_filename(filename):
 
 def save_frame(frame, frame_number, output_path):
     filename = os.path.join(output_path, f'frame_{frame_number:04d}.jpg')
-    cv2.imwrite(filename, frame)
+    if cv2.imwrite(filename, frame):
+        print(f"成功保存: {filename}")
+    else:
+        print(f"無法保存: {filename}")
+
+def compress_frame(frame, quality=80):
+    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
+    result, buffer = cv2.imencode('.jpg', frame, encode_param)
+    return cv2.imdecode(buffer, cv2.IMREAD_COLOR)
 
 def process_video(video_path, output_folder):
     global processing
@@ -148,59 +156,50 @@ def process_video(video_path, output_folder):
     while cap.isOpened() and processing:
         ret, frame = cap.read()
         if not ret:
+            print("讀取幀失敗，結束處理")
             break
 
-        results3 = model_yolov5(frame)
-        annotated_frame3 = results3[0].plot()
+        results = model_yolov5(frame)  # 確保此函數已定義
+        if results is None or len(results) == 0:
+            print("模型處理失敗，沒有返回結果")
+            continue
 
-        save_frame(annotated_frame3, frame_number, output_folder)
+        # 假設 results[0].plot() 返回標註幀
+        annotated_frame = results[0].plot()
+        compressed_frame = compress_frame(annotated_frame)  # 壓縮幀
+        save_frame(compressed_frame, frame_number, output_folder)
         frame_number += 1
 
     cap.release()
+    create_video_from_images(output_folder)
 
-    # Get the folder name for naming the output video
-    folder_name = os.path.basename(os.path.normpath(output_folder))
-    output_video_folder = os.path.join('static', 'output_videos')  # Specify your desired output folder
+def create_video_from_images(image_folder):
+    output_video_folder = 'static/output_videos'
     os.makedirs(output_video_folder, exist_ok=True)
 
-    output_video_path = os.path.join(output_video_folder, f'{folder_name}_output_video.mp4')
-    create_video_from_images(output_folder, output_video_path)
-    print(f"Video created at: {output_video_path}")
-
-def create_video_from_images(image_folder, output_video_path, fps=30):
-    images = []
-    for root, _, files in os.walk(image_folder):
-        for file in files:
-            if file.endswith((".jpg", ".png")):
-                images.append(os.path.join(root, file))
-
+    images = [os.path.join(image_folder, f) for f in os.listdir(image_folder) if f.endswith(('.jpg', '.png'))]
     images.sort()
-    print(f"Found images: {images}")
 
     if not images:
-        print("No images found in the directory.")
+        print("找不到圖片。")
         return
 
-    first_image_path = images[0]
-    first_image = cv2.imread(first_image_path)
-    if first_image is None:
-        print(f"Failed to read the first image: {first_image_path}")
-        return
-
+    first_image = cv2.imread(images[0])
     height, width, _ = first_image.shape
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    video_writer = cv2.VideoWriter(output_video_path, fourcc, fps, (width, height))
+    video_path = os.path.join(output_video_folder, f'{uuid.uuid4()}.mp4')
+    video_writer = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'XVID'), 30, (width, height))
+    print(f"開始寫入影片到: {video_path}")
 
     for img_path in images:
         frame = cv2.imread(img_path)
-        if frame is None:
-            print(f"Failed to read image: {img_path}")
-            continue
-        video_writer.write(frame)
-        print(f"Written frame: {img_path}")
+        if frame is not None:
+            video_writer.write(frame)
+            print(f"寫入幀: {img_path}")
+        else:
+            print(f"無法讀取圖片: {img_path}")
 
     video_writer.release()
-    print(f"Video created at {output_video_path}")
+    print("影片寫入完成。")
 
 @app.route('/vidpred', methods=['GET', 'POST'])
 def vidpred():
@@ -210,20 +209,15 @@ def vidpred():
             return redirect(request.url)
 
         file = request.files['video']
-        
-        if file.filename == '':
-            return redirect(request.url)
-
-        if file:
+        if file and file.filename != '':
             unique_filename = generate_unique_filename(file.filename)
             video_path = os.path.join('static', 'videos', unique_filename)
             os.makedirs(os.path.dirname(video_path), exist_ok=True)
             file.save(video_path)
 
-            # Create a unique folder for processed frames using a UUID
-            output_folder_name = str(uuid.uuid4())
-            output_folder = os.path.join('static', 'processed', output_folder_name)
+            output_folder = os.path.join('static', 'processed', str(uuid.uuid4()))
             os.makedirs(output_folder, exist_ok=True)
+
             processing = True
             threading.Thread(target=process_video, args=(video_path, output_folder)).start()
 
@@ -233,50 +227,39 @@ def vidpred():
 
 def generate_video_frames(video_path):
     cap = cv2.VideoCapture(video_path)
-
     while cap.isOpened() and processing:
         ret, frame = cap.read()
         if not ret:
             break
 
-        results3 = model_yolov5(frame)
-        annotated_frame3 = results3[0].plot()
+        results = model_yolov5(frame)
+        if results:
+            annotated_frame = results[0].plot()
+            compressed_frame = compress_frame(annotated_frame)  # 壓縮幀
+            ret, buffer = cv2.imencode('.jpg', compressed_frame)
+            frame_bytes = buffer.tobytes()
 
-        ret, buffer = cv2.imencode('.jpg', annotated_frame3)
-        frame_bytes = buffer.tobytes()
-
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
 @app.route('/video_feed/<filename>')
 def video_feed(filename):
     return Response(generate_video_frames(os.path.join('static', 'videos', filename)), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-processing = True
 
 @app.route('/stop_processing', methods=['POST'])
 def stop_processing():
     global processing
     processing = False
     return jsonify(success=True)
-
-def process_video():
-    while processing:
-        # 这里是您的视频处理代码
-        pass
-
-# 存储检测到的物体及其时间
-detections = []
-
+#====================================================================================================#
 
 @app.route('/rtsp_feed')
 def rtsp_feed():
     return Response(generate_rtsp_stream(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-path = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
 
 def generate_rtsp_stream():
-    cap = cv2.VideoCapture(path)
+    cap = cv2.VideoCapture('rtsp://admin:Abcd1@34@182.239.73.242:8554')
 
     while cap.isOpened():
         ret, frame = cap.read()
@@ -298,6 +281,29 @@ def generate_rtsp_stream():
 
 def photo1():
     return 'app/static/Screenshot 2024-09-13 003922.png'
+
+@app.route('/live-detect')
+def live_detect():
+    detected_items = []
+    cap = cv2.VideoCapture('rtsp://admin:Abcd1@34@182.239.73.242:8554')
+    
+    try:
+        ret, frame = cap.read()
+        if ret:
+            results = model_yolov5(frame)  # 假設這會返回結果
+            # 假設 results[0] 包含檢測框和其他信息
+            if results and hasattr(results[0], 'boxes'):
+                detected_items = [results[0].names[int(box[5])] for box in results[0].boxes.data]
+            else:
+                logging.error("結果格式不正確或缺少 'boxes'")
+        else:
+            logging.error("無法從視頻流讀取幀")
+    except Exception as e:
+        logging.error(f"實時檢測錯誤: {str(e)}")
+    finally:
+        cap.release()
+    
+    return jsonify(detected_items=detected_items)
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8080, debug=True)
