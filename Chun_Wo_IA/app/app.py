@@ -246,11 +246,11 @@ def generate_video_frames(video_path):
 def video_feed(filename):
     return Response(generate_video_frames(os.path.join('static', 'videos', filename)), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-@app.route('/stop_processing', methods=['POST'])
-def stop_processing():
-    global processing
-    processing = False
-    return jsonify(success=True)
+# @app.route('/stop_processing', methods=['POST'])
+# def stop_processing():
+#     global processing
+#     processing = False
+#     return jsonify(success=True)
 #====================================================================================================#
 
 @app.route('/rtsp_feed')

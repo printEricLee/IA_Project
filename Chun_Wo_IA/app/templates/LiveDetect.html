@@ -29,14 +29,11 @@
 
         .video-container {
             flex: 1;
-            /* 使視頻容器佔據剩餘空間 */
             margin-right: 20px;
-            /* 右側邊距 */
         }
 
         .list-container {
-            width: 300px;
-            /* 設置檢測列表的固定寬度 */
+            width: 600px;
         }
 
         .detection-list {
@@ -56,6 +53,9 @@
             color: white;
             padding: 10px;
             margin: 5px 0;
+        }
+        #live-video{
+            width: 1200px;
         }
     </style>
 </head>
@@ -84,7 +84,7 @@
 
     <div class="container d-flex">
         <div class="video-container flex-grow-1">
-            <img src="{{ url_for('rtsp_feed') }}" alt="RTSP Stream" onload="hide_word()">
+            <img id="live-video" src="{{ url_for('rtsp_feed') }}" alt="RTSP Stream" onload="hide_word()">
         </div>
         <div class="list-container">
             <ul id="detection-list" class="detection-list text-center">
