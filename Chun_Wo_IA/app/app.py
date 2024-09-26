@@ -235,7 +235,7 @@ def generate_video_frames(video_path):
         results = model_yolov5(frame)
         if results:
             annotated_frame = results[0].plot()
-            compressed_frame = compress_frame(annotated_frame)  # 壓縮幀
+            compressed_frame = compress_frame(annotated_frame)
             ret, buffer = cv2.imencode('.jpg', compressed_frame)
             frame_bytes = buffer.tobytes()
 
@@ -246,11 +246,11 @@ def generate_video_frames(video_path):
 def video_feed(filename):
     return Response(generate_video_frames(os.path.join('static', 'videos', filename)), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-# @app.route('/stop_processing', methods=['POST'])
-# def stop_processing():
-#     global processing
-#     processing = False
-#     return jsonify(success=True)
+@app.route('/stop_processing', methods=['POST'])
+def stop_processing():
+    global processing
+    processing = False
+    return jsonify(success=True)
 #====================================================================================================#
 
 @app.route('/rtsp_feed')

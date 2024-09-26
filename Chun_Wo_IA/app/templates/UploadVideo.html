@@ -103,8 +103,8 @@
     <div class="container d-flex" onclick="stop()">
       <div class="video-container">
         <img id="upload-video" src="{{ url_for('video_feed', filename=filename) }}" onload="hide_word()" />
+        <button type="button" id="stop" onclick="stop()">停止</button>
       </div>
-      <button type="button" id="stop" onclick="stop()">停止</button>
       <div class="list-container">
         <ul id="detection-list" class="detection-list text-center">
           <li data-item="stone" class="not-detected">石頭</li>
@@ -121,7 +121,7 @@
       }
 
       function stop() {
-        document.stop = 'live-video';
+        document.stop = 'upload-video';
       }
 
       function updateDetectionStatus(detectedItems) {

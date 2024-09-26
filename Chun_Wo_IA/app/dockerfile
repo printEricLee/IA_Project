@@ -5,7 +5,12 @@ RUN pip install --upgrade pip && \
     ultralytics \
     flask \
     Flask-SocketIO \
-    opencv-python
+    opencv-python \
+    torch \
+    torchvision \
+    torchaudio
+
+RUN pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 
 WORKDIR /app
 

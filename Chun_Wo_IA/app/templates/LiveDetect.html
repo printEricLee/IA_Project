@@ -29,11 +29,14 @@
 
         .video-container {
             flex: 1;
+            /* 使視頻容器佔據剩餘空間 */
             margin-right: 20px;
+            /* 右側邊距 */
         }
 
         .list-container {
-            width: 600px;
+            width: 300px;
+            /* 設置檢測列表的固定寬度 */
         }
 
         .detection-list {
@@ -53,9 +56,6 @@
             color: white;
             padding: 10px;
             margin: 5px 0;
-        }
-        #live-video{
-            width: 1200px;
         }
     </style>
 </head>
@@ -84,18 +84,21 @@
 
     <div class="container d-flex">
         <div class="video-container flex-grow-1">
-            <img id="live-video" src="{{ url_for('rtsp_feed') }}" alt="RTSP Stream" onload="hide_word()">
+            <img src="{{ url_for('rtsp_feed') }}" alt="RTSP Stream" onload="hide_word()">
         </div>
         <div class="list-container">
             <ul id="detection-list" class="detection-list text-center">
-                <li data-item="stone" class="not-detected">石頭</li>
-                <li data-item="dirt" class="not-detected">泥土</li>
-                <li data-item="person" class="not-detected">人</li>
+                <li data-item="stone" class="not-detected">rock</li>
+                <li data-item="dirt" class="not-detected">dict</li>
+                <li data-item="person" class="not-detected">person</li>
+                <li data-item="wet" class="not-detected">wet detected</li>
+                <li data-item="car" class="not-detected">car</li>
             </ul>
         </div>
     </div>
 
     <br />
+
     <center>
         <p>
             <b>
