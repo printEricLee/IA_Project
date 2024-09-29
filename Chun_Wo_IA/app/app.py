@@ -8,6 +8,7 @@ import threading
 import time
 import numpy as np
 import subprocess
+import logging
 
 app = Flask(__name__)
 
@@ -112,8 +113,11 @@ def summarize_results_model(results, model_name):
 
 def get_class_name(class_id, model_name):
     class_map_model1 = {
-        0: "dirt",
-        1: "stone",
+        0: "Slurry",
+        1: "dirt",
+        2: "nothing",
+        3: "other",
+        4: "stone"
     }
     
     class_map_model2 = {
@@ -122,7 +126,7 @@ def get_class_name(class_id, model_name):
     }
 
     if model_name == "Model 1":
-        return class_map_model1.get(class_id, "unknown")
+        return class_map_model1.get(class_id)
     elif model_name == "Model 2":
         return class_map_model2.get(class_id, "unknown")
 
@@ -246,11 +250,32 @@ def generate_video_frames(video_path):
 def video_feed(filename):
     return Response(generate_video_frames(os.path.join('static', 'videos', filename)), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-@app.route('/stop_processing', methods=['POST'])
-def stop_processing():
-    global processing
-    processing = False
-    return jsonify(success=True)
+@app.route('/videos_feed')
+def videos_feed(video_path):
+    cap = cv2.VideoCapture(video_path)
+    while cap.isOpened() and processing:
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        results = model_yolov5(frame)
+        if results:
+            annotated_frame = results[0].plot()
+            detected_items = [results[0].names[int(box[5])] for box in results[0].boxes.data]
+            compressed_frame = compress_frame(annotated_frame)
+            ret, buffer = cv2.imencode('.jpg', compressed_frame)
+            frame_bytes = buffer.tobytes()
+
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+    
+    return jsonify(detected_items=detected_items)
+
+# @app.route('/stop_processing', methods=['POST'])
+# def stop_processing():
+#     global processing
+#     processing = False
+#     return jsonify(success=True)
 #====================================================================================================#
 
 @app.route('/rtsp_feed')
