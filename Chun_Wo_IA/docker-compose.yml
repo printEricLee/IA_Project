@@ -2,6 +2,14 @@ version: '3.8'
 services:
  chun_wo_ia:
     platform: linux/amd64
+    deploy:
+      resources:
+        limits:
+          cpus: '5.0'          # Limit to 1 CPU core
+          memory: 512M         # Limit memory to 512 MB
+        reservations:
+          cpus: '0.5'          # Reserve 0.5 CPU cores
+          memory: 256M
     build:
       context: ./app
       dockerfile: dockerfile
