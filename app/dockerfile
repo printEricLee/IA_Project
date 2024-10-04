@@ -7,10 +7,12 @@ RUN pip install --upgrade pip && \
     Flask-SocketIO \
     opencv-python
 
+RUN npm install -g sass
+
 RUN pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 
 WORKDIR /app
 
 COPY . .
 
-CMD ["python", "app.py"]
+CMD ["sh", "-c", "sass app/static/scss/test.scss app/static/css/index.css && python app.py"]
