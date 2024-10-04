@@ -321,8 +321,8 @@ def generate_rtsp_stream():
             break
 
         # Convert the frame to a tensor
-        frame_tensor = torch.from_numpy(frame).permute(2, 0, 1).float()
-        frame_tensor = frame_tensor.to(device)
+        #frame_tensor = torch.from_numpy(frame).permute(2, 0, 1).float()
+        #frame_tensor = frame_tensor.to(device)
 
         results = model_yolov5(frame)
         annotated_frame = results[0].plot()
@@ -336,9 +336,6 @@ def generate_rtsp_stream():
     # Release resources
     cap.release()
     cv2.destroyAllWindows()
-
-def photo1():
-    return 'app/static/Screenshot 2024-09-13 003922.png'
 
 @app.route('/live-detect')
 def live_detect():
@@ -362,6 +359,13 @@ def live_detect():
         cap.release()
     
     return jsonify(detected_items=detected_items)
+
+def photo1():
+    return 'app/static/Screenshot 2024-09-13 003922.png'
+
+@app.route('/loading-page')
+def loadingPage():
+    return render_template('loading-page.html')
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8080, debug=True)
