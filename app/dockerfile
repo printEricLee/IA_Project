@@ -4,15 +4,14 @@ RUN pip install --upgrade pip && \
     pip install \
     ultralytics \
     flask \
+    opencv-python \
     Flask-SocketIO \
-    opencv-python
-
-RUN npm install -g sass
-
-RUN pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+    opencv-python && \
+    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124 && \
+    pip install tensorflow
 
 WORKDIR /app
 
 COPY . .
 
-CMD ["sh", "-c", "sass app/static/scss/test.scss app/static/css/index.css && python app.py"]
+CMD ["python", "app.py"]
