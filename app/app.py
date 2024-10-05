@@ -13,16 +13,11 @@ import torch
 
 app = Flask(__name__)
 
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 model_yolov8 = YOLO('model/Iteam_object.pt')
-#model_yolov8.to(device)
 
 model_yolov5 = YOLO('model/For_video.pt')
-#model_yolov5.to(device)
 
 model_yolov8_2 = YOLO('model/wet_dry.pt')
-#model_yolov8_2.to(device)
 
 # give every image name
 def generate_unique_filename(filename):
@@ -73,8 +68,6 @@ def index():
             unique_filename = generate_unique_filename(file.filename)
             original_image_path = os.path.join(base_dir, 'originals', unique_filename)
             file.save(original_image_path)
-            
-            #original_image_path.to(device)
 
             # Model predictions
             # Model 1
@@ -105,7 +98,7 @@ def summarize_results_model(results, model_name):
         for box in result.boxes.data:
             class_id = int(box[5])
             confidence = float(box[4])
-            class_name = get_class_name(class_id, model_name)  # Pass model_name for differentiation
+            class_name = get_class_name(class_id, model_name)  
             
             if class_name in detected_classes:
                 detected_classes[class_name].append(confidence)
@@ -161,7 +154,6 @@ def compress_frame(frame, quality=80):
 
 def process_video(video_path, output_folder):
     global processing
-    video_path.to(device)
     cap = cv2.VideoCapture(video_path)
     os.makedirs(output_folder, exist_ok=True)
 
@@ -320,10 +312,6 @@ def generate_rtsp_stream():
         if not ret:
             break
 
-        # Convert the frame to a tensor
-        #frame_tensor = torch.from_numpy(frame).permute(2, 0, 1).float()
-        #frame_tensor = frame_tensor.to(device)
-
         results = model_yolov5(frame)
         annotated_frame = results[0].plot()
 
@@ -377,4 +365,4 @@ def loadingPage():
     return render_template('loading-page.html')
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8080, debug=True)
+    app.run(host="0.0.0.0", port=9380, debug=True)
