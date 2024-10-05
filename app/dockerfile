@@ -13,5 +13,3 @@ RUN pip install --upgrade pip && \
 WORKDIR /app
 
 COPY . .
-
-CMD ["python", "app.py"]
