@@ -339,26 +339,38 @@ def generate_rtsp_stream():
 
 @app.route('/live-detect')
 def live_detect():
-    detected_items = []
+    detected_items_video = []
+    detected_items_object = []
+    detected_items_WetorDry = []
     cap = cv2.VideoCapture('rtsp://admin:Abcd1@34@182.239.73.242:8554')
     
     try:
         ret, frame = cap.read()
         if ret:
-            results = model_yolov5(frame)  # 假設這會返回結果
-            # 假設 results[0] 包含檢測框和其他信息
-            if results and hasattr(results[0], 'boxes'):
-                detected_items = [results[0].names[int(box[5])] for box in results[0].boxes.data]
-            else:
-                logging.error("結果格式不正確或缺少 'boxes'")
+            results_video = model_yolov5(frame)
+            results_object = model_yolov8(frame)
+            result_WetorDry = model_yolov8_2(frame)
+
+            if results_video and hasattr(results_video[0], 'boxes'):
+                detected_items_video = [results_video[0].names[int(box[5])] for box in results_video[0].boxes.data]
+            if results_object and hasattr(results_object[0], 'boxes'):
+                detected_items_object = [results_object[0].names[int(box[5])] for box in results_object[0].boxes.data]
+            if result_WetorDry and hasattr(result_WetorDry[0], 'boxes'):
+                detected_items_WetorDry = [result_WetorDry[0].names[int(box[5])] for box in result_WetorDry[0].boxes.data]
         else:
-            logging.error("無法從視頻流讀取幀")
+            logging.error("Unable to read frame from video stream")
+    except cv2.error as e:
+        logging.error(f"OpenCV error: {str(e)}")
     except Exception as e:
-        logging.error(f"實時檢測錯誤: {str(e)}")
+        logging.error(f"Real-time detection error: {str(e)}")
     finally:
         cap.release()
     
-    return jsonify(detected_items=detected_items)
+    return jsonify(
+        detected_items_video=detected_items_video,
+        detected_items_object=detected_items_object,
+        detected_items_WetorDry=detected_items_WetorDry
+    )
 
 @app.route('/loading-page')
 def loadingPage():
