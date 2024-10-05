@@ -360,9 +360,6 @@ def live_detect():
     
     return jsonify(detected_items=detected_items)
 
-def photo1():
-    return 'app/static/Screenshot 2024-09-13 003922.png'
-
 @app.route('/loading-page')
 def loadingPage():
     return render_template('loading-page.html')
