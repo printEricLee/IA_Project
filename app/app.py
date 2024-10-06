@@ -251,49 +251,45 @@ def generate_video_frames(video_path):
 def video_feed(filename):
     return Response(generate_video_frames(os.path.join('static', 'videos', filename)), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-@app.route('/videos_feed')
-def videos_feed(video_path):
-    cap = cv2.VideoCapture(video_path)
-    while cap.isOpened() and processing:
-        ret, frame = cap.read()
-        if not ret:
-            break
+@app.route('/videos-detect', methods=['GET'])
+def video_detect():
+    video_path = request.args.get('video_path')
+    detected_items_video = []
+    detected_items_object = []
+    detected_items_WetorDry = []
 
-        results = model_yolov5(frame)
-        if results:
-            annotated_frame = results[0].plot()
-            detected_items = [results[0].names[int(box[5])] for box in results[0].boxes.data]
-            compressed_frame = compress_frame(annotated_frame)
-            ret, buffer = cv2.imencode('.jpg', compressed_frame)
-            frame_bytes = buffer.tobytes()
-
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-    
-    return jsonify(detected_items=detected_items)
-
-@app.route('/videos-detect')
-def video_detect(video_path):
-    detected_items = []
     cap = cv2.VideoCapture(video_path)
     
     try:
         ret, frame = cap.read()
         if ret:
-            results = model_yolov5(frame)  # 假設這會返回結果
-            # 假設 results[0] 包含檢測框和其他信息
-            if results and hasattr(results[0], 'boxes'):
-                detected_items = [results[0].names[int(box[5])] for box in results[0].boxes.data]
-            else:
-                logging.error("結果格式不正確或缺少 'boxes'")
+            results_video = model_yolov5(frame)
+            results_object = model_yolov8(frame)
+            result_WetorDry = model_yolov8_2(frame)
+
+            if results_video and hasattr(results_video[0], 'boxes'):
+                detected_items_video = [results_video[0].names[int(box[5])] for box in results_video[0].boxes.data]
+            if results_object and hasattr(results_object[0], 'boxes'):
+                detected_items_object = [results_object[0].names[int(box[5])] for box in results_object[0].boxes.data]
+            if result_WetorDry and hasattr(result_WetorDry[0], 'boxes'):
+                detected_items_WetorDry = [result_WetorDry[0].names[int(box[5])] for box in result_WetorDry[0].boxes.data]
         else:
-            logging.error("無法從視頻流讀取幀")
+            logging.error("Unable to read frame from video stream")
+            return jsonify(error="Unable to read frame from video stream"), 500
+    except cv2.error as e:
+        logging.error(f"OpenCV error: {str(e)}")
+        return jsonify(error=f"OpenCV error: {str(e)}"), 500
     except Exception as e:
-        logging.error(f"實時檢測錯誤: {str(e)}")
+        logging.error(f"Real-time detection error: {str(e)}")
+        return jsonify(error=f"Real-time detection error: {str(e)}"), 500
     finally:
         cap.release()
     
-    return jsonify(detected_items=detected_items)
+    return jsonify(
+        detected_items_video=detected_items_video,
+        detected_items_object=detected_items_object,
+        detected_items_WetorDry=detected_items_WetorDry
+    )
 
 #====================================================================================================#
 
