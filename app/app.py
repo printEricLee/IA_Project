@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, redirect, Response, jsonify, 
 from ultralytics import YOLO
 import cv2
 import os
-from PIL import Image
 import uuid
 import threading
 import logging
@@ -15,12 +14,15 @@ model_yolov5 = YOLO('model/For_video.pt')
 
 model_yolov8_2 = YOLO('model/wet_dry.pt')
 
-# give every image name
+#====================================================================================================#        
+# give all file name
 def generate_unique_filename(filename):
     _, extension = os.path.splitext(filename)
     unique_filename = str(uuid.uuid4()) + extension
     return unique_filename
 
+#====================================================================================================#        
+# set all html route
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -41,107 +43,79 @@ def objectDetection():
 def serve_static_file():
     return send_from_directory('static', 'index.css')
 
+#====================================================================================================#        
+# image
 @app.route('/imgpred', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        # Upload image
-        if 'image' not in request.files:
+        if 'image' not in request.files or not request.files['image'].filename:
             return redirect(request.url)
 
         file = request.files['image']
-        
-        # Check user uploaded image
-        if file.filename == '':
-            return redirect(request.url)
+        base_dir = os.path.join('static', 'images')
+        os.makedirs(os.path.join(base_dir, 'originals'), exist_ok=True)
+        os.makedirs(os.path.join(base_dir, 'results_model1'), exist_ok=True)
+        os.makedirs(os.path.join(base_dir, 'results_model2'), exist_ok=True)
 
-        if file:
-            # Ensure the required directories exist
-            base_dir = os.path.join('static', 'images')
-            os.makedirs(os.path.join(base_dir, 'originals'), exist_ok=True)
-            os.makedirs(os.path.join(base_dir, 'results_model1'), exist_ok=True)
-            os.makedirs(os.path.join(base_dir, 'results_model2'), exist_ok=True)
+        unique_filename = generate_unique_filename(file.filename)
+        original_image_path = os.path.join(base_dir, 'originals', unique_filename)
+        file.save(original_image_path)
 
-            unique_filename = generate_unique_filename(file.filename)
-            original_image_path = os.path.join(base_dir, 'originals', unique_filename)
-            file.save(original_image_path)
+        # Model predictions
+        results1 = model_yolov8(original_image_path)
+        result_image1 = results1[0].plot()
+        result_path1 = os.path.join(base_dir, 'results_model1', 'result_model1_' + unique_filename)
+        cv2.imwrite(result_path1, result_image1)
+        summary1 = summarize_results_model(results1, "Model 1")
 
-            # Model predictions
-            # Model 1
-            results1 = model_yolov8(original_image_path)
-            result_image1 = results1[0].plot()
-            result_path1 = os.path.join(base_dir, 'results_model1', 'result_model1_' + unique_filename)
-            Image.fromarray(result_image1[..., ::-1]).save(result_path1)
-            summary1 = summarize_results_model(results1, "Model 1")
+        result2 = model_yolov8_2(original_image_path)
+        result_image2 = result2[0].plot()
+        result_path2 = os.path.join(base_dir, 'results_model2', 'result_model2_' + unique_filename)
+        cv2.imwrite(result_path2, result_image2)
+        summary2 = summarize_results_model(result2, "Model 2")
 
-            # Model 2
-            gray_image = cv2.imread(original_image_path)
-            gray_image = cv2.cvtColor(gray_image, cv2.COLOR_BGR2GRAY)
-            result2 = model_yolov8_2(original_image_path)
-            result_image2 = result2[0].plot()
-            result_path2 = os.path.join(base_dir, 'results_model2', 'result_model2_' + unique_filename)
-            Image.fromarray(result_image2[..., ::-1]).save(result_path2)
-            summary2 = summarize_results_model(result2, "Model 2")
-
-            return render_template('ObjectDetection.html', summary1=summary1, image_pred1=result_path1, summary2=summary2, 
-                                   image_pred2=result_path2, image_path=original_image_path)
+        return render_template('ObjectDetection.html', summary1=summary1, image_pred1=result_path1,
+                               summary2=summary2, image_pred2=result_path2, image_path=original_image_path)
 
     return render_template('index.html', image_path=None)
-    
+
+# boxs name
 def summarize_results_model(results, model_name):
     detected_classes = {}
-    
+
     for result in results:
         for box in result.boxes.data:
             class_id = int(box[5])
             confidence = float(box[4])
-            class_name = get_class_name(class_id, model_name)  
-            
-            if class_name in detected_classes:
-                detected_classes[class_name].append(confidence)
-            else:
-                detected_classes[class_name] = [confidence]
+            class_name = get_class_name(class_id, model_name)
 
-    summary = []
-    for class_name, scores in detected_classes.items():
-        max_confidence = max(scores)
-        summary.append(f"{class_name}: {max_confidence:.2f}")
+            detected_classes.setdefault(class_name, []).append(confidence)
 
+    summary = [f"{name}: {max(scores):.2f}" for name, scores in detected_classes.items()]
     return f"{model_name} detected: " + ", ".join(summary) if summary else f"{model_name} detected: No objects detected."
 
 def get_class_name(class_id, model_name):
-    class_map_model1 = {
-        0: "Slurry",
-        1: "dirt",
-        2: "nothing",
-        3: "other",
-        4: "stone"
+    class_maps = {
+        "Model 1": {0: "Slurry", 1: "dirt", 2: "nothing", 3: "other", 4: "stone"},
+        "Model 2": {0: "dry", 1: "wet"}
     }
-    
-    class_map_model2 = {
-        0: "dry",
-        1: "wet"
-    }
-
-    if model_name == "Model 1":
-        return class_map_model1.get(class_id)
-    elif model_name == "Model 2":
-        return class_map_model2.get(class_id, "unknown")
+    return class_maps.get(model_name, {}).get(class_id, "unknown")
 
 #====================================================================================================#        
 # video
-# Global variable to manage processing status
 
-processing = False
-
-def generate_unique_filename(filename):
-    return filename
+# send the predicted video to website
+@app.route('/video_feed/<filename>')
+def video_feed(filename):
+    return Response(generate_video_frames(os.path.join('static', 'videos', filename)),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 def save_frame(frame, frame_number, output_path):
     filename = os.path.join(output_path, f'frame_{frame_number:04d}.jpg')
     if cv2.imwrite(filename, frame):
-        print(f"成功保存: {filename}")
+        print(f"Saved: {filename}")
     else:
-        print(f"無法保存: {filename}")
+        print(f"Failed to save: {filename}")
 
 def compress_frame(frame, quality=80):
     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
@@ -157,62 +131,57 @@ def process_video(video_path, output_folder):
     while cap.isOpened() and processing:
         ret, frame = cap.read()
         if not ret:
-            print("讀取幀失敗，結束處理")
+            print("Failed to read frame, ending processing")
             break
 
-        results = model_yolov5(frame)  # 確保此函數已定義
-        if results is None or len(results) == 0:
-            print("模型處理失敗，沒有返回結果")
+        results = model_yolov5(frame)
+        if not results:
+            print("Model processing failed, no results")
             continue
 
-        # 假設 results[0].plot() 返回標註幀
         annotated_frame = results[0].plot()
-        compressed_frame = compress_frame(annotated_frame)  # 壓縮幀
+        compressed_frame = compress_frame(annotated_frame)
         save_frame(compressed_frame, frame_number, output_folder)
         frame_number += 1
 
     cap.release()
     create_video_from_images(output_folder)
 
+# use predicted images from video, make its to video
 def create_video_from_images(image_folder):
     output_video_folder = 'static/output_videos'
     os.makedirs(output_video_folder, exist_ok=True)
 
-    images = [os.path.join(image_folder, f) for f in os.listdir(image_folder) if f.endswith(('.jpg', '.png'))]
-    images.sort()
-
+    images = sorted([os.path.join(image_folder, f) for f in os.listdir(image_folder) if f.endswith(('.jpg', '.png'))])
     if not images:
-        print("找不到圖片。")
+        print("No images found.")
         return
 
     first_image = cv2.imread(images[0])
     height, width, _ = first_image.shape
     video_path = os.path.join(output_video_folder, f'{uuid.uuid4()}.mp4')
     video_writer = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'XVID'), 30, (width, height))
-    print(f"開始寫入影片到: {video_path}")
+    print(f"Writing video to: {video_path}")
 
     for img_path in images:
         frame = cv2.imread(img_path)
         if frame is not None:
             video_writer.write(frame)
-            print(f"寫入幀: {img_path}")
+            print(f"Wrote frame: {img_path}")
         else:
-            print(f"無法讀取圖片: {img_path}")
+            print(f"Cannot read image: {img_path}")
 
     video_writer.release()
-    print("影片寫入完成。")
+    print("Video writing complete.")
 
+# show the predicted video 
 @app.route('/vidpred', methods=['GET', 'POST'])
 def vidpred():
     global processing
     if request.method == 'POST':
-        if 'video' not in request.files:
-            return redirect(request.url)
-
-        file = request.files['video']
-        if file and file.filename != '':
-            unique_filename = generate_unique_filename(file.filename)
-            video_path = os.path.join('static', 'videos', unique_filename)
+        file = request.files.get('video')
+        if file and file.filename:
+            video_path = os.path.join('static', 'videos', file.filename)
             os.makedirs(os.path.dirname(video_path), exist_ok=True)
             file.save(video_path)
 
@@ -221,11 +190,11 @@ def vidpred():
 
             processing = True
             threading.Thread(target=process_video, args=(video_path, output_folder)).start()
-
-            return render_template('UploadVideo.html', filename=unique_filename)
+            return render_template('UploadVideo.html', filename=file.filename)
 
     return render_template('UploadVideo.html')
 
+# predicted video of every frame
 def generate_video_frames(video_path):
     cap = cv2.VideoCapture(video_path)
     while cap.isOpened() and processing:
@@ -238,64 +207,43 @@ def generate_video_frames(video_path):
             annotated_frame = results[0].plot()
             compressed_frame = compress_frame(annotated_frame)
             ret, buffer = cv2.imencode('.jpg', compressed_frame)
-            frame_bytes = buffer.tobytes()
-
             yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+                   b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
 
-@app.route('/video_feed/<filename>')
-def video_feed(filename):
-    return Response(generate_video_frames(os.path.join('static', 'videos', filename)), mimetype='multipart/x-mixed-replace; boundary=frame')
-
+# which boxes have predicted from the video
 @app.route('/videos-detect', methods=['GET'])
 def video_detect():
     video_path = request.args.get('video_path')
-    detected_items_video = []
-    detected_items_object = []
-    detected_items_WetorDry = []
+    detected_items = {'video': [], 'object': [], 'WetorDry': []}
 
     cap = cv2.VideoCapture(video_path)
     
     try:
         ret, frame = cap.read()
         if ret:
-            results_video = model_yolov5(frame)
-            results_object = model_yolov8(frame)
-            result_WetorDry = model_yolov8_2(frame)
-
-            if results_video and hasattr(results_video[0], 'boxes'):
-                detected_items_video = [results_video[0].names[int(box[5])] for box in results_video[0].boxes.data]
-            if results_object and hasattr(results_object[0], 'boxes'):
-                detected_items_object = [results_object[0].names[int(box[5])] for box in results_object[0].boxes.data]
-            if result_WetorDry and hasattr(result_WetorDry[0], 'boxes'):
-                detected_items_WetorDry = [result_WetorDry[0].names[int(box[5])] for box in result_WetorDry[0].boxes.data]
+            for model, key in zip([model_yolov5, model_yolov8, model_yolov8_2], detected_items.keys()):
+                results = model(frame)
+                if results and hasattr(results[0], 'boxes'):
+                    detected_items[key] = [results[0].names[int(box[5])] for box in results[0].boxes.data]
         else:
-            logging.error("Unable to read frame from video stream")
             return jsonify(error="Unable to read frame from video stream"), 500
-    except cv2.error as e:
-        logging.error(f"OpenCV error: {str(e)}")
-        return jsonify(error=f"OpenCV error: {str(e)}"), 500
     except Exception as e:
-        logging.error(f"Real-time detection error: {str(e)}")
-        return jsonify(error=f"Real-time detection error: {str(e)}"), 500
+        return jsonify(error=str(e)), 500
     finally:
         cap.release()
-    
-    return jsonify(
-        detected_items_video=detected_items_video,
-        detected_items_object=detected_items_object,
-        detected_items_WetorDry=detected_items_WetorDry
-    )
 
-#====================================================================================================#
+    return jsonify(detected_items)
 
+#====================================================================================================#        
+# live
+
+# send the predicted video to website
 @app.route('/rtsp_feed')
 def rtsp_feed():
     return Response(generate_rtsp_stream(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-
+# predicted video of every frame
 link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
-
 def generate_rtsp_stream():
     cap = cv2.VideoCapture(link)
 
@@ -317,32 +265,25 @@ def generate_rtsp_stream():
     cap.release()
     cv2.destroyAllWindows()
 
+# which boxes have predicted from the video
 @app.route('/live-detect')
 def live_detect():
-    detected_items_video = []
-    detected_items_object = []
-    detected_items_WetorDry = []
     cap = cv2.VideoCapture('rtsp://admin:Abcd1@34@182.239.73.242:8554')
+    detected_items_video, detected_items_object, detected_items_WetorDry = [], [], []
     
     try:
         ret, frame = cap.read()
         if ret:
-            results_video = model_yolov5(frame)
-            results_object = model_yolov8(frame)
-            result_WetorDry = model_yolov8_2(frame)
+            models = [model_yolov5, model_yolov8, model_yolov8_2]
+            results = [model(frame) for model in models]
 
-            if results_video and hasattr(results_video[0], 'boxes'):
-                detected_items_video = [results_video[0].names[int(box[5])] for box in results_video[0].boxes.data]
-            if results_object and hasattr(results_object[0], 'boxes'):
-                detected_items_object = [results_object[0].names[int(box[5])] for box in results_object[0].boxes.data]
-            if result_WetorDry and hasattr(result_WetorDry[0], 'boxes'):
-                detected_items_WetorDry = [result_WetorDry[0].names[int(box[5])] for box in result_WetorDry[0].boxes.data]
+            detected_items_video = [results[0][0].names[int(box[5])] for box in results[0][0].boxes.data] if hasattr(results[0][0], 'boxes') else []
+            detected_items_object = [results[1][0].names[int(box[5])] for box in results[1][0].boxes.data] if hasattr(results[1][0], 'boxes') else []
+            detected_items_WetorDry = [results[2][0].names[int(box[5])] for box in results[2][0].boxes.data] if hasattr(results[2][0], 'boxes') else []
         else:
             logging.error("Unable to read frame from video stream")
-    except cv2.error as e:
-        logging.error(f"OpenCV error: {str(e)}")
     except Exception as e:
-        logging.error(f"Real-time detection error: {str(e)}")
+        logging.error(f"Detection error: {str(e)}")
     finally:
         cap.release()
     
