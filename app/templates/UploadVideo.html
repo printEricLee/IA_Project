@@ -40,113 +40,117 @@
     <br />
     <br />
     <br />
+    <h1 class="text-center">影片檢測</h1>
 
-    <div style="text-align: center;">
-      <h1>影片檢測</h1>
+    <br />
 
-      <br />
-
-      <div id="loading-message">
-        <h2>請上傳所需檢測的<u><b><i>影片</i></b></u></h2>
-        <form action="{{ url_for('vidpred') }}" method="post" enctype="multipart/form-data">
-          <input type="file" name="video" accept="video/*" required>
-          <button type="submit" id="upload-button" onclick="hide_button()">上傳</button>
-        </form>
-      </div>
-
-      <div id="loading-spinner" style="display: none; text-align: center;">
-        <p>請等候...</p>
-      </div>
-
-      <div class="container d-flex">
-        <div id="video-container">
-          <img id="upload-video" src="{{ url_for('video_feed', filename=filename) }}" onload="hide_word()">
-        </div>
-        <div id="list-container">
-          <ul id="detection-list" class="detection-list text-center">
-            <li data-item="stone" class="not-detected">Rock</li>
-            <li data-item="dirt" class="not-detected">Dict</li>
-            <li data-item="Person" class="not-detected">Person /*rubbish*/</li>
-            <li data-item="wet" class="not-detected">Wet detected</li>
-            <li data-item="Other-truck" class="not-detected">Other-truck</li>
-          </ul>
-          <div id="yes-no-container" class="text-center">
-            <div id="yes-no-box" class="not-detected">No</div>
-          </div>
-        </div>
-      </div>
-
-      <script>
-        function updateDetectionStatus(detected_items_video, detected_items_WetorDry, detected_items_object) {
-          const items = document.querySelectorAll('#detection-list li');
-          const yesNoBox = document.getElementById('yes-no-box');
-
-          // Update detection status for each item
-          items.forEach(item => {
-            const itemName = item.getAttribute('data-item');
-            if (detected_items_video.includes(itemName)) {
-              item.classList.remove('not-detected');
-              item.classList.add('detected');
-            } else {
-              item.classList.remove('detected');
-              item.classList.add('not-detected');
-            }
-          });
-
-          // Set yes/no box based on various conditions
-          let wetStatus = detected_items_WetorDry.includes('wet');
-          let truckStatus = detected_items_video.includes('Other-truck');
-          let objectStatus = detected_items_object.includes('dict') || detected_items_object.includes('stone');
-
-          // Update yesNoBox based on detected items
-          if (truckStatus) {
-            yesNoBox.textContent = "Yes";
-            yesNoBox.style.backgroundColor = 'green';
-          } else {
-            yesNoBox.textContent = "No";
-            yesNoBox.style.backgroundColor = 'red';
-          }
-          yesNoBox.style.color = 'white';
-
-          // Additional conditions for wet and object detection
-          if (wetStatus) {
-            yesNoBox.textContent = "No";
-            yesNoBox.style.backgroundColor = 'red';
-          } else {
-            yesNoBox.textContent = "Yes";
-            yesNoBox.style.backgroundColor = 'green';
-          }
-
-          // Check for both 'stone' and 'dict' in detected items
-          if (detected_items_object.includes('stone') && detected_items_object.includes('dict')) {
-            yesNoBox.style.backgroundColor = 'red';
-          } else {
-            yesNoBox.style.backgroundColor = 'green';
-          }
-          yesNoBox.style.color = 'white';
-        }
-
-        // Function to fetch detection data
-        function fetchDetectionData() {
-          fetch('/videos-detect')
-            .then(response => {
-              if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-              }
-              return response.json();
-            })
-            .then(data => {
-              const detectedItemsVideo = data.detected_items_video;
-              const detectedItemsWetorDry = data.detected_items_WetorDry;
-              const detectedItemsObject = data.detected_items_object;
-              updateDetectionStatus(detectedItemsVideo, detectedItemsWetorDry, detectedItemsObject);
-            })
-            .catch(error => console.error('Error fetching detection data:', error));
-        }
-
-        setInterval(fetchDetectionData, 5000);
-      </script>
+    <div id="loading-message">
+      <h2>請上傳所需檢測的<u><b><i>影片</i></b></u></h2>
+      <form action="{{ url_for('vidpred') }}" method="post" enctype="multipart/form-data">
+        <input type="file" name="video_path" accept="video/*" required>
+        <button type="submit" id="upload-button" onclick="hide_button()">上傳</button>
+      </form>
     </div>
+
+    <div id="loading-spinner" style="display: none; text-align: center;">
+      <p>請等候...</p>
+    </div>
+    {% if filename %}
+    <div class="container d-flex">
+      <div id="video-container">
+        <img src="{{ url_for('video_feed', filename=filename) }}" onload="hide_word()">
+      </div>
+
+      <div id="list-container">
+        <ul id="detection-list" class="detection-list text-center">
+          <li data-item="stone" class="not-detected">Rock</li>
+          <li data-item="dirt" class="not-detected">Dict</li>
+          <li data-item="Person" class="not-detected">Person /*rubbish*/</li>
+          <li data-item="wet" class="not-detected">Wet detected</li>
+          <li data-item="Other-truck" class="not-detected">Other-truck</li>
+        </ul>
+        <div id="yes-no-container" class="text-center">
+          <div id="yes-no-box" class="not-detected">No</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      setTimeout(function () {
+        location.reload();
+      }, 120000);
+
+      function updateDetectionStatus(detected_items_video, detected_items_WetorDry, detected_items_object) {
+        const items = document.querySelectorAll('#detection-list li');
+        const yesNoBox = document.getElementById('yes-no-box');
+
+        // Update detection status for each item
+        items.forEach(item => {
+          const itemName = item.getAttribute('data-item');
+          if (detected_items_video.includes(itemName) || detected_items_object.includes(itemName) || detected_items_WetorDry.includes(itemName)) {
+            item.classList.remove('not-detected');
+            item.classList.add('detected');
+          } else {
+            item.classList.remove('detected');
+            item.classList.add('not-detected');
+          }
+        });
+
+        // Set yes/no box based on various conditions
+        let wetStatus = detected_items_WetorDry.includes('wet');
+        let truckStatus = detected_items_video.includes('Other-truck');
+        let objectStatus = detected_items_object.includes('dict') && detected_items_object.includes('stone');
+
+        // Update yesNoBox based on detected items
+        if (truckStatus) {
+          yesNoBox.textContent = "Yes";
+          yesNoBox.style.backgroundColor = 'green';
+        } else {
+          yesNoBox.textContent = "No";
+          yesNoBox.style.backgroundColor = 'red';
+        }
+        yesNoBox.style.color = 'white';
+
+        // Additional conditions for wet and object detection
+        if (wetStatus) {
+          yesNoBox.textContent = "No";
+          yesNoBox.style.backgroundColor = 'red';
+        } else {
+          yesNoBox.textContent = "Yes";
+          yesNoBox.style.backgroundColor = 'green';
+        }
+
+        // Check for both 'stone' and 'dict' in detected items
+        if (detected_items_object.includes('stone') && detected_items_object.includes('dict')) {
+          yesNoBox.style.backgroundColor = 'red';
+        } else {
+          yesNoBox.style.backgroundColor = 'green';
+        }
+        yesNoBox.style.color = 'white';
+      }
+
+      // Function to fetch detection data
+      function fetchDetectionData_video() {
+        fetch('video_path')
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then(data => {
+            const detectedItemsVideo = data.detected_items_video;
+            const detectedItemsWetorDry = data.detected_items_WetorDry;
+            const detectedItemsObject = data.detected_items_object;
+            updateDetectionStatus(detectedItemsVideo, detectedItemsWetorDry, detectedItemsObject);
+          })
+          .catch(error => console.error('Error fetching detection data:', error));
+      }
+
+      // Set an interval to fetch data every 5 seconds
+      setInterval(fetchDetectionData_video, 5000);
+    </script>
+    {% endif %}
 
     <footer class="bg-dark py-4 mt-auto">
       <div class="text-center justify-content-between flex-column flex-sm-row">
