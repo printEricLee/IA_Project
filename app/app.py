@@ -5,6 +5,7 @@ import os
 import uuid
 import threading
 import logging
+import numpy as np
 
 app = Flask(__name__)
 
@@ -280,21 +281,16 @@ def live_detect():
     cap = cv2.VideoCapture(link)
     detected_items_video, detected_items_object, detected_items_WetorDry = [], [], []
     
-    try:
-        ret, frame = cap.read()
-        if ret:
-            models = [model_yolov5, model_yolov8, model_yolov8_2]
-            results = [model(frame) for model in models]
+    ret, frame = cap.read()
+    if ret:
+        models = [model_yolov5, model_yolov8, model_yolov8_2]
+        results = [model(frame) for model in models]
 
-            detected_items_video = [results[0][0].names[int(box[5])] for box in results[0][0].boxes.data] if hasattr(results[0][0], 'boxes') else []
-            detected_items_object = [results[1][0].names[int(box[5])] for box in results[1][0].boxes.data] if hasattr(results[1][0], 'boxes') else []
-            detected_items_WetorDry = [results[2][0].names[int(box[5])] for box in results[2][0].boxes.data] if hasattr(results[2][0], 'boxes') else []
-        else:
-            logging.error("Unable to read frame from video stream")
-    except Exception as e:
-        logging.error(f"Detection error: {str(e)}")
-    finally:
-        cap.release()
+        detected_items_video = [results[0][0].names[int(box[5])] for box in results[0][0].boxes.data] if hasattr(results[0][0], 'boxes') else []
+        detected_items_object = [results[1][0].names[int(box[5])] for box in results[1][0].boxes.data] if hasattr(results[1][0], 'boxes') else []
+        detected_items_WetorDry = [results[2][0].names[int(box[5])] for box in results[2][0].boxes.data] if hasattr(results[2][0], 'boxes') else []
+
+    cap.release()
     
     return jsonify(
         detected_items_video=detected_items_video,
