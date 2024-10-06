@@ -179,7 +179,7 @@ def create_video_from_images(image_folder):
 def vidpred():
     global processing
     if request.method == 'POST':
-        file = request.files.get('video')
+        file = request.files.get('video_path')
         if file and file.filename:
             video_path = os.path.join('static', 'videos', file.filename)
             os.makedirs(os.path.dirname(video_path), exist_ok=True)
@@ -209,30 +209,39 @@ def generate_video_frames(video_path):
             ret, buffer = cv2.imencode('.jpg', compressed_frame)
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+            
+    # Release resources
+    cap.release()
+    cv2.destroyAllWindows()
 
 # which boxes have predicted from the video
-@app.route('/videos-detect', methods=['GET'])
+@app.route('/video-detect', methods=['GET'])
 def video_detect():
     video_path = request.args.get('video_path')
-    detected_items = {'video': [], 'object': [], 'WetorDry': []}
-
     cap = cv2.VideoCapture(video_path)
+    detected_items_video, detected_items_object, detected_items_WetorDry = [], [], []
     
     try:
         ret, frame = cap.read()
         if ret:
-            for model, key in zip([model_yolov5, model_yolov8, model_yolov8_2], detected_items.keys()):
-                results = model(frame)
-                if results and hasattr(results[0], 'boxes'):
-                    detected_items[key] = [results[0].names[int(box[5])] for box in results[0].boxes.data]
+            models = [model_yolov5, model_yolov8, model_yolov8_2]
+            results = [model(frame) for model in models]
+
+            detected_items_video = [results[0][0].names[int(box[5])] for box in results[0][0].boxes.data] if hasattr(results[0][0], 'boxes') else []
+            detected_items_object = [results[1][0].names[int(box[5])] for box in results[1][0].boxes.data] if hasattr(results[1][0], 'boxes') else []
+            detected_items_WetorDry = [results[2][0].names[int(box[5])] for box in results[2][0].boxes.data] if hasattr(results[2][0], 'boxes') else []
         else:
-            return jsonify(error="Unable to read frame from video stream"), 500
+            logging.error("Unable to read frame from video stream")
     except Exception as e:
-        return jsonify(error=str(e)), 500
+        logging.error(f"Detection error: {str(e)}")
     finally:
         cap.release()
-
-    return jsonify(detected_items)
+    
+    return jsonify(
+        detected_items_video=detected_items_video,
+        detected_items_object=detected_items_object,
+        detected_items_WetorDry=detected_items_WetorDry
+    )
 
 #====================================================================================================#        
 # live
@@ -268,7 +277,7 @@ def generate_rtsp_stream():
 # which boxes have predicted from the video
 @app.route('/live-detect')
 def live_detect():
-    cap = cv2.VideoCapture('rtsp://admin:Abcd1@34@182.239.73.242:8554')
+    cap = cv2.VideoCapture(link)
     detected_items_video, detected_items_object, detected_items_WetorDry = [], [], []
     
     try:
