@@ -75,31 +75,31 @@
       </div>
     </div>
 
-      <h1>檢測結果</h1>
-      <ol>{{ summary1 }}</ol>
+    <h1 class="text-center">檢測結果</h1>
+    <ol class="text-center">{{ summary1 }}</ol>
 
-      {% if "wet" in summary2 %}
-      <div class="alert-primary">Wet condition detected!</div>
-      {% endif %}
-
-      <button type="button" id="reset-button">重新上傳</button>
-
-      <script>
-        const resetButton = document.getElementById('reset-button');
-
-        resetButton.addEventListener('click', () => {
-          // Redirect to the objectDetection page
-          window.location.href = "{{ url_for('objectDetection') }}";
-        });
-      </script>
-    </div>
+    {% if "wet" in summary2 %}
+    <div class="text-center red">Wet condition detected!</div>
     {% endif %}
 
-    <footer class="bg-dark py-4 mt-auto">
-      <div class="text-center justify-content-between flex-column flex-sm-row">
-        <div class="small m-0 text-white"> &copy;Chun Wo Construction and Engineering Co. Ltd. </div>
-      </div>
-    </footer>
+    <button type="button" id="reset-button">重新上傳</button>
+
+    <script>
+      const resetButton = document.getElementById('reset-button');
+
+      resetButton.addEventListener('click', () => {
+        // Redirect to the objectDetection page
+        window.location.href = "{{ url_for('objectDetection') }}";
+      });
+    </script>
+  </div>
+  {% endif %}
+
+  <footer class="bg-dark py-4 mt-auto">
+    <div class="text-center justify-content-between flex-column flex-sm-row">
+      <div class="small m-0 text-white"> &copy;Chun Wo Construction and Engineering Co. Ltd. </div>
+    </div>
+  </footer>
 </body>
 
 </html>
