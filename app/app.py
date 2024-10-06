@@ -5,11 +5,7 @@ import os
 from PIL import Image
 import uuid
 import threading
-import time
-import numpy as np
-import subprocess
 import logging
-import torch
 
 app = Flask(__name__)
 
