@@ -89,7 +89,7 @@
             // Update detection status for each item
             items.forEach(item => {
                 const itemName = item.getAttribute('data-item');
-                if (detected_items_video.includes(itemName)) {
+                if (detected_items_video.includes(itemName) || detected_items_object.includes(itemName) || detected_items_WetorDry.includes(itemName)) {
                     item.classList.remove('not-detected');
                     item.classList.add('detected');
                 } else {
@@ -101,7 +101,7 @@
             // Set yes/no box based on various conditions
             let wetStatus = detected_items_WetorDry.includes('wet');
             let truckStatus = detected_items_video.includes('Other-truck');
-            let objectStatus = detected_items_object.includes('dict') || detected_items_object.includes('stone');
+            let objectStatus = detected_items_object.includes('dict') && detected_items_object.includes('stone');
 
             // Update yesNoBox based on detected items
             if (truckStatus) {
