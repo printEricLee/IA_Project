@@ -142,14 +142,13 @@
                 })
                 .then(data => {
                     const detectedItemsVideo = data.detected_items_video;
-                    const detectedItemsWetorDry = data.detected_items_WetorDry; // Ensure you fetch this as well
-                    const detectedItemsObject = data.detected_items_object; // Ensure you fetch this as well
+                    const detectedItemsWetorDry = data.detected_items_WetorDry;
+                    const detectedItemsObject = data.detected_items_object;
                     updateDetectionStatus(detectedItemsVideo, detectedItemsWetorDry, detectedItemsObject);
                 })
                 .catch(error => console.error('Error fetching detection data:', error));
         }
 
-        // Set interval to fetch data every 5 seconds
         setInterval(fetchDetectionData, 5000);
     </script>
 </body>
