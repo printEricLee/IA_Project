@@ -9,6 +9,6 @@ services:
       dockerfile: dockerfile
     container_name: chun_wo_ia
     ports:
-      - 9380:9380
+      - 8080:8080
     volumes:
       - ./app:/app
