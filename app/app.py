@@ -2,28 +2,34 @@ from flask import Flask, render_template, request, redirect, Response, jsonify, 
 from ultralytics import YOLO
 import cv2
 import os
+from PIL import Image
 import uuid
 import threading
-import logging
+import time
 import numpy as np
+import subprocess
+import logging
+import torch
 
 app = Flask(__name__)
 
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 model_yolov8 = YOLO('model/Iteam_object.pt')
+#model_yolov8.to(device)
 
 model_yolov5 = YOLO('model/For_video.pt')
+#model_yolov5.to(device)
 
 model_yolov8_2 = YOLO('model/wet_dry.pt')
+#model_yolov8_2.to(device)
 
-#====================================================================================================#        
-# give all file name
+# give every image name
 def generate_unique_filename(filename):
     _, extension = os.path.splitext(filename)
     unique_filename = str(uuid.uuid4()) + extension
     return unique_filename
 
-#====================================================================================================#        
-# set all html route
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -44,79 +50,110 @@ def objectDetection():
 def serve_static_file():
     return send_from_directory('static', 'index.css')
 
-#====================================================================================================#        
-# image
 @app.route('/imgpred', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        if 'image' not in request.files or not request.files['image'].filename:
+        # Upload image
+        if 'image' not in request.files:
             return redirect(request.url)
 
         file = request.files['image']
-        base_dir = os.path.join('static', 'images')
-        os.makedirs(os.path.join(base_dir, 'originals'), exist_ok=True)
-        os.makedirs(os.path.join(base_dir, 'results_model1'), exist_ok=True)
-        os.makedirs(os.path.join(base_dir, 'results_model2'), exist_ok=True)
+        
+        # Check user uploaded image
+        if file.filename == '':
+            return redirect(request.url)
 
-        unique_filename = generate_unique_filename(file.filename)
-        original_image_path = os.path.join(base_dir, 'originals', unique_filename)
-        file.save(original_image_path)
+        if file:
+            # Ensure the required directories exist
+            base_dir = os.path.join('static', 'images')
+            os.makedirs(os.path.join(base_dir, 'originals'), exist_ok=True)
+            os.makedirs(os.path.join(base_dir, 'results_model1'), exist_ok=True)
+            os.makedirs(os.path.join(base_dir, 'results_model2'), exist_ok=True)
 
-        # Model predictions
-        results1 = model_yolov8(original_image_path)
-        result_image1 = results1[0].plot()
-        result_path1 = os.path.join(base_dir, 'results_model1', 'result_model1_' + unique_filename)
-        cv2.imwrite(result_path1, result_image1)
-        summary1 = summarize_results_model(results1, "Model 1")
+            unique_filename = generate_unique_filename(file.filename)
+            original_image_path = os.path.join(base_dir, 'originals', unique_filename)
+            file.save(original_image_path)
+            
+            #original_image_path.to(device)
 
-        result2 = model_yolov8_2(original_image_path)
-        result_image2 = result2[0].plot()
-        result_path2 = os.path.join(base_dir, 'results_model2', 'result_model2_' + unique_filename)
-        cv2.imwrite(result_path2, result_image2)
-        summary2 = summarize_results_model(result2, "Model 2")
+            # Model predictions
+            # Model 1
+            results1 = model_yolov8(original_image_path)
+            result_image1 = results1[0].plot()
+            result_path1 = os.path.join(base_dir, 'results_model1', 'result_model1_' + unique_filename)
+            Image.fromarray(result_image1[..., ::-1]).save(result_path1)
+            summary1 = summarize_results_model(results1, "Model 1")
 
-        return render_template('ObjectDetection.html', summary1=summary1, image_pred1=result_path1,
-                               summary2=summary2, image_pred2=result_path2, image_path=original_image_path)
+            # Model 2
+            gray_image = cv2.imread(original_image_path)
+            gray_image = cv2.cvtColor(gray_image, cv2.COLOR_BGR2GRAY)
+            result2 = model_yolov8_2(original_image_path)
+            result_image2 = result2[0].plot()
+            result_path2 = os.path.join(base_dir, 'results_model2', 'result_model2_' + unique_filename)
+            Image.fromarray(result_image2[..., ::-1]).save(result_path2)
+            summary2 = summarize_results_model(result2, "Model 2")
+
+            return render_template('ObjectDetection.html', summary1=summary1, image_pred1=result_path1, summary2=summary2, 
+                                   image_pred2=result_path2, image_path=original_image_path)
 
     return render_template('index.html', image_path=None)
-
-# boxs name
+    
 def summarize_results_model(results, model_name):
     detected_classes = {}
-
+    
     for result in results:
         for box in result.boxes.data:
             class_id = int(box[5])
             confidence = float(box[4])
-            class_name = get_class_name(class_id, model_name)
+            class_name = get_class_name(class_id, model_name)  # Pass model_name for differentiation
+            
+            if class_name in detected_classes:
+                detected_classes[class_name].append(confidence)
+            else:
+                detected_classes[class_name] = [confidence]
 
-            detected_classes.setdefault(class_name, []).append(confidence)
+    summary = []
+    for class_name, scores in detected_classes.items():
+        max_confidence = max(scores)
+        summary.append(f"{class_name}: {max_confidence:.2f}")
 
-    summary = [f"{name}: {max(scores):.2f}" for name, scores in detected_classes.items()]
     return f"{model_name} detected: " + ", ".join(summary) if summary else f"{model_name} detected: No objects detected."
 
 def get_class_name(class_id, model_name):
-    class_maps = {
-        "Model 1": {0: "Slurry", 1: "dirt", 2: "nothing", 3: "other", 4: "stone"},
-        "Model 2": {0: "dry", 1: "wet"}
+    class_map_model1 = {
+        0: "Slurry",
+        1: "dirt",
+        2: "nothing",
+        3: "other",
+        4: "stone"
     }
-    return class_maps.get(model_name, {}).get(class_id, "unknown")
+    
+    class_map_model2 = {
+        0: "dry",
+        1: "wet"
+    }
+
+    if model_name == "Model 1":
+        return class_map_model1.get(class_id)
+    elif model_name == "Model 2":
+        return class_map_model2.get(class_id, "unknown")
 
 #====================================================================================================#        
 # video
+# Global variable to manage processing status
 
-# send the predicted video to website
-@app.route('/video_feed/<filename>')
-def video_feed(filename):
-    return Response(generate_video_frames(os.path.join('static', 'videos', filename)),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
+processing = False
+detected_items = []
+
+def generate_unique_filename(filename):
+    return filename
 
 def save_frame(frame, frame_number, output_path):
     filename = os.path.join(output_path, f'frame_{frame_number:04d}.jpg')
     if cv2.imwrite(filename, frame):
-        print(f"Saved: {filename}")
+        print(f"成功保存: {filename}")
     else:
-        print(f"Failed to save: {filename}")
+        print(f"無法保存: {filename}")
 
 def compress_frame(frame, quality=80):
     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
@@ -124,7 +161,9 @@ def compress_frame(frame, quality=80):
     return cv2.imdecode(buffer, cv2.IMREAD_COLOR)
 
 def process_video(video_path, output_folder):
-    global processing
+    global processing, detected_items
+    detected_items = []  # 每次視頻處理時重置
+
     cap = cv2.VideoCapture(video_path)
     os.makedirs(output_folder, exist_ok=True)
 
@@ -132,57 +171,69 @@ def process_video(video_path, output_folder):
     while cap.isOpened() and processing:
         ret, frame = cap.read()
         if not ret:
-            print("Failed to read frame, ending processing")
+            print("讀取幀失敗，結束處理")
             break
 
-        results = model_yolov5(frame)
-        if not results:
-            print("Model processing failed, no results")
+        results = model_yolov5(frame)  # 在幀上運行 YOLOv5
+        if results is None or len(results) == 0:
+            print("模型處理失敗，沒有返回結果")
             continue
 
-        annotated_frame = results[0].plot()
-        compressed_frame = compress_frame(annotated_frame)
-        save_frame(compressed_frame, frame_number, output_folder)
+        # 更新檢測項目，只添加框住的物體
+        boxes = results[0].boxes.data
+        for box in boxes:
+            item_name = results[0].names[int(box[5])]  # 獲取物體名稱
+            detected_items.append(item_name)  # 添加到 detected_items
+
+        #print("目前檢測到的物體:", detected_items)  # 調試打印
+        
+        annotated_frame = results[0].plot()  # 繪製標註幀
+        compressed_frame = compress_frame(annotated_frame)  # 壓縮幀
+        save_frame(compressed_frame, frame_number, output_folder)  # 保存幀
         frame_number += 1
 
     cap.release()
     create_video_from_images(output_folder)
 
-# use predicted images from video, make its to video
 def create_video_from_images(image_folder):
     output_video_folder = 'static/output_videos'
     os.makedirs(output_video_folder, exist_ok=True)
 
-    images = sorted([os.path.join(image_folder, f) for f in os.listdir(image_folder) if f.endswith(('.jpg', '.png'))])
+    images = [os.path.join(image_folder, f) for f in os.listdir(image_folder) if f.endswith(('.jpg', '.png'))]
+    images.sort()
+
     if not images:
-        print("No images found.")
+        print("找不到圖片。")
         return
 
     first_image = cv2.imread(images[0])
     height, width, _ = first_image.shape
     video_path = os.path.join(output_video_folder, f'{uuid.uuid4()}.mp4')
     video_writer = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'XVID'), 30, (width, height))
-    print(f"Writing video to: {video_path}")
+    print(f"開始寫入影片到: {video_path}")
 
     for img_path in images:
         frame = cv2.imread(img_path)
         if frame is not None:
             video_writer.write(frame)
-            print(f"Wrote frame: {img_path}")
+            print(f"寫入幀: {img_path}")
         else:
-            print(f"Cannot read image: {img_path}")
+            print(f"無法讀取圖片: {img_path}")
 
     video_writer.release()
-    print("Video writing complete.")
+    print("影片寫入完成。")
 
-# show the predicted video 
 @app.route('/vidpred', methods=['GET', 'POST'])
 def vidpred():
     global processing
     if request.method == 'POST':
-        file = request.files.get('video_path')
-        if file and file.filename:
-            video_path = os.path.join('static', 'videos', file.filename)
+        if 'video' not in request.files:
+            return redirect(request.url)
+
+        file = request.files['video']
+        if file and file.filename != '':
+            unique_filename = generate_unique_filename(file.filename)
+            video_path = os.path.join('static', 'videos', unique_filename)
             os.makedirs(os.path.dirname(video_path), exist_ok=True)
             file.save(video_path)
 
@@ -191,11 +242,11 @@ def vidpred():
 
             processing = True
             threading.Thread(target=process_video, args=(video_path, output_folder)).start()
-            return render_template('UploadVideo.html', filename=file.filename)
+
+            return render_template('UploadVideo.html', filename=unique_filename)
 
     return render_template('UploadVideo.html')
 
-# predicted video of every frame
 def generate_video_frames(video_path):
     cap = cv2.VideoCapture(video_path)
     while cap.isOpened() and processing:
@@ -208,52 +259,51 @@ def generate_video_frames(video_path):
             annotated_frame = results[0].plot()
             compressed_frame = compress_frame(annotated_frame)
             ret, buffer = cv2.imencode('.jpg', compressed_frame)
+            frame_bytes = buffer.tobytes()
+
             yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
-            
-    # Release resources
-    cap.release()
-    cv2.destroyAllWindows()
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
-# which boxes have predicted from the video
-@app.route('/video-detect', methods=['GET'])
-def video_detect():
-    video_path = request.args.get('video_path')
+@app.route('/video_feed/<filename>')
+def video_feed(filename):
+    return Response(generate_video_frames(os.path.join('static', 'videos', filename)), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/videos_feed')
+def videos_feed(video_path):
     cap = cv2.VideoCapture(video_path)
-    detected_items_video, detected_items_object, detected_items_WetorDry = [], [], []
-    
-    try:
+    while cap.isOpened() and processing:
         ret, frame = cap.read()
-        if ret:
-            models = [model_yolov5, model_yolov8, model_yolov8_2]
-            results = [model(frame) for model in models]
+        if not ret:
+            break
 
-            detected_items_video = [results[0][0].names[int(box[5])] for box in results[0][0].boxes.data] if hasattr(results[0][0], 'boxes') else []
-            detected_items_object = [results[1][0].names[int(box[5])] for box in results[1][0].boxes.data] if hasattr(results[1][0], 'boxes') else []
-            detected_items_WetorDry = [results[2][0].names[int(box[5])] for box in results[2][0].boxes.data] if hasattr(results[2][0], 'boxes') else []
-        else:
-            logging.error("Unable to read frame from video stream")
-    except Exception as e:
-        logging.error(f"Detection error: {str(e)}")
-    finally:
-        cap.release()
+        results = model_yolov5(frame)
+        if results:
+            annotated_frame = results[0].plot()
+            detected_items = [results[0].names[int(box[5])] for box in results[0].boxes.data]
+            compressed_frame = compress_frame(annotated_frame)
+            ret, buffer = cv2.imencode('.jpg', compressed_frame)
+            frame_bytes = buffer.tobytes()
+
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
     
-    return jsonify(
-        detected_items_video=detected_items_video,
-        detected_items_object=detected_items_object,
-        detected_items_WetorDry=detected_items_WetorDry
-    )
+    return jsonify(detected_items=detected_items)
 
-#====================================================================================================#        
-# live
+@app.route('/get_detection_results', methods=['GET'])
+def get_detection_results():
+    global detected_items
+    print("當前檢測到的項目:", detected_items)  # 調試打印
+    return jsonify(detected_items=list(set(detected_items)))  # 返回唯一的檢測項目
 
-# send the predicted video to website
+#====================================================================================================#
+
 @app.route('/rtsp_feed')
 def rtsp_feed():
     return Response(generate_rtsp_stream(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-# predicted video of every frame
+
 link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
+
 def generate_rtsp_stream():
     cap = cv2.VideoCapture(link)
 
@@ -261,6 +311,10 @@ def generate_rtsp_stream():
         ret, frame = cap.read()
         if not ret:
             break
+
+        # Convert the frame to a tensor
+        frame_tensor = torch.from_numpy(frame).permute(2, 0, 1).float()
+        frame_tensor = frame_tensor.to(device)
 
         results = model_yolov5(frame)
         annotated_frame = results[0].plot()
@@ -275,32 +329,31 @@ def generate_rtsp_stream():
     cap.release()
     cv2.destroyAllWindows()
 
-# which boxes have predicted from the video
+def photo1():
+    return 'app/static/Screenshot 2024-09-13 003922.png'
+
 @app.route('/live-detect')
 def live_detect():
-    cap = cv2.VideoCapture(link)
-    detected_items_video, detected_items_object, detected_items_WetorDry = [], [], []
+    detected_items = []
+    cap = cv2.VideoCapture('rtsp://admin:Abcd1@34@182.239.73.242:8554')
     
-    ret, frame = cap.read()
-    if ret:
-        models = [model_yolov5, model_yolov8, model_yolov8_2]
-        results = [model(frame) for model in models]
-
-        detected_items_video = [results[0][0].names[int(box[5])] for box in results[0][0].boxes.data] if hasattr(results[0][0], 'boxes') else []
-        detected_items_object = [results[1][0].names[int(box[5])] for box in results[1][0].boxes.data] if hasattr(results[1][0], 'boxes') else []
-        detected_items_WetorDry = [results[2][0].names[int(box[5])] for box in results[2][0].boxes.data] if hasattr(results[2][0], 'boxes') else []
-
-    cap.release()
+    try:
+        ret, frame = cap.read()
+        if ret:
+            results = model_yolov5(frame)  # 假設這會返回結果
+            # 假設 results[0] 包含檢測框和其他信息
+            if results and hasattr(results[0], 'boxes'):
+                detected_items = [results[0].names[int(box[5])] for box in results[0].boxes.data]
+            else:
+                logging.error("結果格式不正確或缺少 'boxes'")
+        else:
+            logging.error("無法從視頻流讀取幀")
+    except Exception as e:
+        logging.error(f"實時檢測錯誤: {str(e)}")
+    finally:
+        cap.release()
     
-    return jsonify(
-        detected_items_video=detected_items_video,
-        detected_items_object=detected_items_object,
-        detected_items_WetorDry=detected_items_WetorDry
-    )
-
-@app.route('/loading-page')
-def loadingPage():
-    return render_template('loading-page.html')
+    return jsonify(detected_items=detected_items)
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=9380, debug=True)
+    app.run(host="0.0.0.0", port=8080, debug=True)
