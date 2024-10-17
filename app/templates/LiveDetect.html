@@ -10,19 +10,64 @@
     <script src="static/js/script.js"></script>
 
     <!-- css -->
-    <link rel="stylesheet" href="static/css/style.css" />
+    <link rel="stylesheet" href="static/css/index.css" />
 
-    <!-- google fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Madimi+One&display=swap" rel="stylesheet" />
 
-    <!-- Bootstrap-->
+    <!-- import Bootstrap-->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .video-container {
+            flex: 1;
+            margin-right: 20px;
+        }
+
+        .list-container {
+            width: 300px;
+        }
+
+        .detection-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .detected {
+            background-color: red;
+            color: white;
+            padding: 10px;
+            margin: 5px 0;
+        }
+
+        .not-detected {
+            background-color: grey;
+            color: white;
+            padding: 10px;
+            margin: 5px 0;
+        }
+
+        #yes-no-box {
+            font-size: 24px;
+            padding: 10px;
+            margin-top: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+    </style>
 </head>
 
 <body>
+    <br />
+    <br />
+
     <div id="header">
         <span style="font-size: 30px; cursor: pointer" onclick="openMenu()"> &#9776; </span>
     </div>
@@ -36,24 +81,22 @@
 
     <br />
     <br />
-    <br />
-    <br />
 
-    <div class="text-center">
+    <div style="text-align: center;">
         <p id="loading-message">請等候...</p>
     </div>
 
     <div class="container d-flex">
-        <div id="video-container">
+        <div class="video-container flex-grow-1">
             <img src="{{ url_for('rtsp_feed') }}" alt="RTSP Stream" onload="hide_word()">
         </div>
-        <div id="list-container">
+        <div class="list-container">
             <ul id="detection-list" class="detection-list text-center">
-                <li data-item="stone" class="not-detected">Rock</li>
-                <li data-item="dirt" class="not-detected">Dict</li>
-                <li data-item="Person" class="not-detected">Person /*rubbish*/</li>
-                <li data-item="wet" class="not-detected">Wet detected</li>
-                <li data-item="Other-truck" class="not-detected">Other-truck</li>
+                <li data-item="stone" class="not-detected">rock</li>
+                <li data-item="dirt" class="not-detected">dict</li>
+                <li data-item="Person" class="not-detected">Person</li>
+                <li data-item="wet" class="not-detected">wet detected</li>
+                <li data-item="Other-truck" class="not-detected">car</li>
             </ul>
             <div id="yes-no-container" class="text-center">
                 <div id="yes-no-box" class="not-detected">No</div>
@@ -63,7 +106,7 @@
 
     <br />
 
-    <div class="text-center">
+    <div style="text-align: center;">
         <p>
             <b>
                 <i>*實時直播可能會有所延遲</i>
@@ -71,25 +114,26 @@
         </p>
     </div>
 
-    <footer class="bg-dark py-4 mt-auto" style="flex: 0;">
-        <div class="text-center justify-content-between flex-column flex-sm-row">
-            <div class="small m-0 text-white"> &copy;Chun Wo Construction and Engineering Co. Ltd. </div>
-        </div>
-    </footer>
+
 
     <script>
+        function hide_word() {
+            const loadingMessage = document.getElementById('loading-message');
+            loadingMessage.style.display = 'none';
+        }
+
         setTimeout(function () {
             location.reload();
         }, 120000);
 
-        function updateDetectionStatus(detected_items_video, detected_items_WetorDry, detected_items_object) {
+        // 更新檢測狀態的函數
+        function updateDetectionStatus(detectedItems) {
             const items = document.querySelectorAll('#detection-list li');
             const yesNoBox = document.getElementById('yes-no-box');
 
-            // Update detection status for each item
             items.forEach(item => {
                 const itemName = item.getAttribute('data-item');
-                if (detected_items_video.includes(itemName) || detected_items_object.includes(itemName) || detected_items_WetorDry.includes(itemName)) {
+                if (detectedItems.includes(itemName)) {
                     item.classList.remove('not-detected');
                     item.classList.add('detected');
                 } else {
@@ -98,59 +142,40 @@
                 }
             });
 
-            // Set yes/no box based on various conditions
-            let wetStatus = detected_items_WetorDry.includes('wet');
-            let truckStatus = detected_items_video.includes('Other-truck');
-            let objectStatus = detected_items_object.includes('dict') && detected_items_object.includes('stone');
-
-            // Update yesNoBox based on detected items
-            if (truckStatus) {
-                yesNoBox.textContent = "Yes";
-                yesNoBox.style.backgroundColor = 'green';
-            } else {
+            // Check for "wet detected"
+            if (detectedItems.includes('wet')) {
                 yesNoBox.textContent = "No";
+                yesNoBox.classList.remove('not-detected');
+                yesNoBox.classList.add('detected');
                 yesNoBox.style.backgroundColor = 'red';
-            }
-            yesNoBox.style.color = 'white';
-
-            // Additional conditions for wet and object detection
-            if (wetStatus) {
-                yesNoBox.textContent = "No";
-                yesNoBox.style.backgroundColor = 'red';
+                yesNoBox.style.color = 'white';
             } else {
                 yesNoBox.textContent = "Yes";
+                yesNoBox.classList.remove('detected');
+                yesNoBox.classList.add('not-detected');
                 yesNoBox.style.backgroundColor = 'green';
+                yesNoBox.style.color = 'white';
             }
-
-            // Check for both 'stone' and 'dict' in detected items
-            if (detected_items_object.includes('stone') && detected_items_object.includes('dict')) {
-                yesNoBox.style.backgroundColor = 'red';
-            } else {
-                yesNoBox.style.backgroundColor = 'green';
-            }
-            yesNoBox.style.color = 'white';
         }
 
-        // Function to fetch detection data
-        function fetchDetectionData() {
+        setInterval(() => {
             fetch('/live-detect')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
-                    }
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
-                    const detectedItemsVideo = data.detected_items_video;
-                    const detectedItemsWetorDry = data.detected_items_WetorDry;
-                    const detectedItemsObject = data.detected_items_object;
-                    updateDetectionStatus(detectedItemsVideo, detectedItemsWetorDry, detectedItemsObject);
+                    const detectedItems = data.detected_items;
+                    updateDetectionStatus(detectedItems);
                 })
                 .catch(error => console.error('Error fetching detection data:', error));
-        }
+        }, 5000);
 
-        setInterval(fetchDetectionData, 5000);
+
     </script>
+    
+    <footer class="bg-dark py-4 mt-auto">
+    <div class="text-center justify-content-between flex-column flex-sm-row">
+        <div class="small m-0 text-white"> &copy;Chun Wo Construction and Engineering Co. Ltd. </div>
+    </div>
+    </footer>
 </body>
 
 </html>
