@@ -340,8 +340,7 @@ def live_detect():
     try:
         ret, frame = cap.read()
         if ret:
-            results = model_yolov5(frame)  # 假設這會返回結果
-            # 假設 results[0] 包含檢測框和其他信息
+            results = model_yolov5(frame)
             if results and hasattr(results[0], 'boxes'):
                 detected_items = [results[0].names[int(box[5])] for box in results[0].boxes.data]
             else:
