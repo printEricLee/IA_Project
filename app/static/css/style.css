@@ -16,7 +16,7 @@ body {
     left: 0;
 }
 
-@media screen {
+/* @media screen {
     .setMenu {
         height: 100%;
         width: 0;
@@ -103,4 +103,29 @@ body {
     padding: 10px;
     margin-top: 20px;
     transition: background-color 0.3s, color 0.3s;
+} */
+
+.image-container {
+    position: relative;
+    overflow: hidden;
+}
+.image-container img {
+    width: 100%;
+    transition: filter 0.5s ease;
+}
+.image-container:hover img {
+    filter: blur(5px);
+}
+.overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 24px;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+.image-container:hover .overlay {
+    opacity: 1;
 }

@@ -4,7 +4,7 @@ services:
     build:
       context: ./app
       dockerfile: dockerfile
-    container_name: chun_wo_fyp
+    container_name: CW_fyp
     ports:
       - 8080:8080
     volumes:

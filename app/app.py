@@ -8,6 +8,7 @@ import threading
 import time
 import subprocess
 import logging
+import os
 
 # f is the file name 
 
@@ -21,8 +22,9 @@ model_yolov8_2 = YOLO('model/wet_dry.pt')
 
 link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
 
-base_dir = os.path.join('static', 'runs')
-os.make.path(base_dir,'output')
+os.makedirs('static/runs', exist_ok=True)
+base_dir = os.path.join('static/runs')
+
 
 ############### give every image name ###############
 # def generate_unique_filename(filename):
@@ -39,15 +41,15 @@ def home():
 def liveDetect():
     return render_template('LiveDetect.html')
     
-@app.route("/uploadVideo")
+@app.route("/upload")
 def image_video_predict():
-    return render_template('UploadVideo.html')
+    return render_template('upload_web.html')
 
 ############### image ###############
 @app.route('/upload', methods=['GET', 'POST'])
 def predict_img():
     if request.method == 'POST':
-        if 'image' not in request.files:
+        if 'file' not in request.files:
             # make file and upload image or video in it
             os.makedirs('uploads', exist_ok=True)
             f = request.files['file']
@@ -60,31 +62,63 @@ def predict_img():
         if f.filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS:
             file_extension = f.filename.rsplit('.', 1)[1].lower()
         
-        if f.filename == '':
-            return redirect(request.url)
+        if file_extension in ['jpeg', 'jpg', 'png']:
+            img = cv2.imread(filepath)
+            detections = model_yolov8(img, save=True)
+            result_path1 = detections[0].plot()
+        elif file_extension == 'mp4': 
+                video_path = filepath
+                cap = cv2.VideoCapture(video_path)
 
-        if f:
-            unique_filename = generate_unique_filename(f.filename)
-            original_image_path = os.path.join(base_dir, 'originals', unique_filename)
-            f.save(original_image_path)
+                frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                            
+                fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+                out = cv2.VideoWriter('output.mp4', fourcc, 30.0, (frame_width, frame_height))
+                
+                while cap.isOpened():
+                    ret, frame = cap.read()
+                    if not ret:
+                        break                                                      
 
-            # Model 1
-            results1 = model_yolov8(original_image_path)
-            result_image1 = results1[0].plot()
-            result_path1 = os.path.join(base_dir, 'results_model1', 'result_model1_' + unique_filename)
-            Image.fromarray(result_image1[..., ::-1]).save(result_path1)
+                    results_car_object = model_yolov5(frame, save=True)
+                    results_wet_dry = model_yolov8_2(frame, save=True)
+                    print(results_car_object)
+                    cv2.waitKey(1)
 
-            # Model 2
-            gray_image = cv2.imread(original_image_path)
-            gray_image = cv2.cvtColor(gray_image, cv2.COLOR_BGR2GRAY)
-            result2 = model_yolov8_2(original_image_path)
-            result_image2 = result2[0].plot()
-            result_path2 = os.path.join(base_dir, 'results_model2', 'result_model2_' + unique_filename)
-            Image.fromarray(result_image2[..., ::-1]).save(result_path2)
+                    res_plotted = results_car_object[0].plot()
 
+                cap.release()
+                out.release()
 
-            return render_template('ObjectDetection.html', image_pred1=result_path1, 
-                                   image_pred2=result_path2, image_path=original_image_path)
+                return videos_feed()
+
+        # if f:
+        #     unique_filename = generate_unique_filename(f.filename)
+        #     original_image_path = os.path.join(base_dir, 'originals', unique_filename)
+        #     f.save(original_image_path)
+
+        #     # Model 1
+        #     results1 = model_yolov8(original_image_path)
+        #     result_image1 = results1[0].plot()
+        #     result_path1 = os.path.join(base_dir, 'results_model1', 'result_model1_' + unique_filename)
+        #     Image.fromarray(result_image1[..., ::-1]).save(result_path1)
+
+        #     # Model 2
+        #     gray_image = cv2.imread(original_image_path)
+        #     gray_image = cv2.cvtColor(gray_image, cv2.COLOR_BGR2GRAY)
+        #     result2 = model_yolov8_2(original_image_path)
+        #     result_image2 = result2[0].plot()
+        #     result_path2 = os.path.join(base_dir, 'results_model2', 'result_model2_' + unique_filename)
+        #     Image.fromarray(result_image2[..., ::-1]).save(result_path2)
+
+        folder_path = 'static/runs/detect/'
+        subfolders = [f for f in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path, f))]    
+        latest_subfolder = max(subfolders, key=lambda x: os.path.getctime(os.path.join(folder_path, x)))   
+        image_path = folder_path+'/'+latest_subfolder+'/'+f.filename
+
+        return render_template('ObjectDetection.html', image_pred1=result_path1, 
+                                image_path=image_path)
 
     return render_template('index.html', image_path=None)
     
@@ -154,13 +188,10 @@ def generate_rtsp_stream():
     cap.release()
     cv2.destroyAllWindows()
 
-def photo1():
-    return 'app/static/Screenshot 2024-09-13 003922.png'
-
 @app.route('/live-detect')
 def live_detect():
     detected_items = []
-    cap = cv2.VideoCapture('rtsp://admin:Abcd1@34@182.239.73.242:8554')
+    cap = cv2.VideoCapture(link)
     
     try:
         ret, frame = cap.read()
@@ -188,7 +219,7 @@ def video_feed():
 
 @app.route('/rtsp_feed')
 def rtsp_feed():
-    return Response(live_detect(), 
+    return Response(generate_rtsp_stream(), 
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
