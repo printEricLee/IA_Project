@@ -22,8 +22,10 @@ model_yolov8_2 = YOLO('model/wet_dry.pt')
 
 link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
 
-os.makedirs('static/runs', exist_ok=True)
-base_dir = os.path.join('static/runs')
+os.makedirs('runs/detect', exist_ok=True)
+os.makedirs('uploads', exist_ok=True)
+os.makedirs('result', exist_ok=True)
+
 
 
 ############### give every image name ###############
@@ -46,83 +48,80 @@ def image_video_predict():
     return render_template('upload_web.html')
 
 ############### image ###############
-@app.route('/upload', methods=['GET', 'POST'])
+@app.route("/upload", methods=["GET", "POST"])
 def predict_img():
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            # make file and upload image or video in it
-            os.makedirs('uploads', exist_ok=True)
+    if request.method == "POST":
+        if 'file' in request.files:
             f = request.files['file']
             basepath = os.path.dirname(__file__)
             filepath = os.path.join(basepath,'uploads',f.filename)
             f.save(filepath)
 
-        ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'mp4'}
-                                               
-        if f.filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS:
-            file_extension = f.filename.rsplit('.', 1)[1].lower()
-        
-        if file_extension in ['jpeg', 'jpg', 'png']:
-            img = cv2.imread(filepath)
-            detections = model_yolov8(img, save=True)
-            result_path1 = detections[0].plot()
-        elif file_extension == 'mp4': 
-                video_path = filepath
-                cap = cv2.VideoCapture(video_path)
+            ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'mp4'}
+                                                
+            if f.filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS:
+                file_extension = f.filename.rsplit('.', 1)[1].lower()
+            
+            if file_extension in ['jpeg', 'jpg', 'png']:
+                img = cv2.imread(filepath)
+                detections = model_yolov8(img, save=True)
+                result_result_image = detections[0].plot()
+                result_path = os.path.join('results' + f.filename)
 
-                frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-                            
-                fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-                out = cv2.VideoWriter('output.mp4', fourcc, 30.0, (frame_width, frame_height))
-                
-                while cap.isOpened():
-                    ret, frame = cap.read()
-                    if not ret:
-                        break                                                      
+            elif file_extension == 'mp4': 
+                    video_path = filepath
+                    cap = cv2.VideoCapture(video_path)
 
-                    results_car_object = model_yolov5(frame, save=True)
-                    results_wet_dry = model_yolov8_2(frame, save=True)
-                    print(results_car_object)
-                    cv2.waitKey(1)
+                    frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                    frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                                
+                    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+                    out = cv2.VideoWriter('output.mp4', fourcc, 30.0, (frame_width, frame_height))
+                    
+                    while cap.isOpened():
+                        ret, frame = cap.read()
+                        if not ret:
+                            break                                                      
 
-                    res_plotted = results_car_object[0].plot()
+                        results_car_object = model_yolov5(frame, save=True)
+                        results_wet_dry = model_yolov8_2(frame, save=True)
+                        print(results_car_object)
+                        cv2.waitKey(1)
 
-                cap.release()
-                out.release()
+                        res_plotted = results_car_object[0].plot()
 
-                return videos_feed()
+                    cap.release()
+                    out.release()
 
-        # if f:
-        #     unique_filename = generate_unique_filename(f.filename)
-        #     original_image_path = os.path.join(base_dir, 'originals', unique_filename)
-        #     f.save(original_image_path)
+                    return videos_feed()
 
-        #     # Model 1
-        #     results1 = model_yolov8(original_image_path)
-        #     result_image1 = results1[0].plot()
-        #     result_path1 = os.path.join(base_dir, 'results_model1', 'result_model1_' + unique_filename)
-        #     Image.fromarray(result_image1[..., ::-1]).save(result_path1)
-
-        #     # Model 2
-        #     gray_image = cv2.imread(original_image_path)
-        #     gray_image = cv2.cvtColor(gray_image, cv2.COLOR_BGR2GRAY)
-        #     result2 = model_yolov8_2(original_image_path)
-        #     result_image2 = result2[0].plot()
-        #     result_path2 = os.path.join(base_dir, 'results_model2', 'result_model2_' + unique_filename)
-        #     Image.fromarray(result_image2[..., ::-1]).save(result_path2)
-
-        folder_path = 'static/runs/detect/'
+        folder_path = 'runs/detect/'
         subfolders = [f for f in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path, f))]    
         latest_subfolder = max(subfolders, key=lambda x: os.path.getctime(os.path.join(folder_path, x)))   
         image_path = folder_path+'/'+latest_subfolder+'/'+f.filename
 
-        return render_template('ObjectDetection.html', image_pred1=result_path1, 
-                                image_path=image_path)
+        return render_template('upload_web.html', image_pred1=result_path, image_path=image_path)
 
-    return render_template('index.html', image_path=None)
+    # return render_template('index.html', image_path=None)
     
-# def summarize_results_model(results, model_name):
+# if f:
+            #     unique_filename = generate_unique_filename(f.filename)
+            #     original_image_path = os.path.join(base_dir, 'originals', unique_filename)
+            #     f.save(original_image_path)
+
+            #     # Model 1
+            #     results1 = model_yolov8(original_image_path)
+            #     result_image1 = results1[0].plot()
+            #     result_path1 = os.path.join(base_dir, 'results_model1', 'result_model1_' + unique_filename)
+            #     Image.fromarray(result_image1[..., ::-1]).save(result_path1)
+
+            #     # Model 2
+            #     gray_image = cv2.imread(original_image_path)
+            #     gray_image = cv2.cvtColor(gray_image, cv2.COLOR_BGR2GRAY)
+            #     result2 = model_yolov8_2(original_image_path)
+            #     result_image2 = result2[0].plot()
+            #     result_path2 = os.path.join(base_dir, 'results_model2', 'result_model2_' + unique_filename)
+            #     Image.fromarray(result_image2[..., ::-1]).save(result_path2)
 
 ############### video ###############
 detected_items = []
