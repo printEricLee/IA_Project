@@ -52,15 +52,13 @@
               <div class="card-body">
                 <div class="tab-content p-0">
                   <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 700px;">
-                    <form class="form-signin col-lg-3" method=post enctype=multipart/form-data name="form1">
+                    <form action="/upload" class="form-signin col-lg-3" method=post enctype=multipart/form-data name="form1">
 
                       <h1 class="h3 mb-3 font-weight-normal">Upload any image or video</h1>
+
                       <input type="file" name="file" class="form-control-file" id="inputfile">
 
-                      <br />
-
-                      <button class="btn btn-block btn-default btn-sm " type="submit">Upload</button>
-                    </form>
+                      <button class="btn btn-block btn-default btn-sm " type="submit">Upload</button </form>
                   </div>
                 </div>
               </div>
@@ -78,24 +76,12 @@
               <div class="card-body">
                 <div class="tab-content p-0">
                   <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 700px;">
-                    {% if image_path %}
-                    <img src="{{ url_for('image_video_predict')}}" alt="模型結果"
-                      style="height:640; width:640px;;">
-
-                    <script>
-                      document.getElementById("my-image").onload = function () {
-                        this.style.display = "block";
-                      };
-                    </script>
-
-                    <img id="my-video-image" src="{{ url_for('video_feed') }}" alt="結果"
-                      style="height:640; width:640px;;" />
-
-                    <script>
-                      document.getElementById("my-video-image").onload = function () {
-                        this.style.display = "block";
-                      };
-                    </script>
+                    {% if image_url %}
+                    <img src="{{ image_url }}" alt="Result" style="height:640px; width:640px;">
+                    {% else %}
+                    <p>No image to display.</p>
+                    <!-- <img id="my-video-image" src="{{ url_for('video_feed') }}" alt="Video Result"
+                      style="height:640px; width:640px;"> -->
                     {% endif %}
                   </div>
                 </div>
