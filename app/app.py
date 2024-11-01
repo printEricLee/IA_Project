@@ -9,6 +9,7 @@ import time
 import subprocess
 import logging
 import os
+import logging
 
 # f is the file name 
 
@@ -24,9 +25,9 @@ link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
 
 os.makedirs('runs/detect', exist_ok=True)
 os.makedirs('uploads', exist_ok=True)
-os.makedirs('result', exist_ok=True)
+#os.makedirs('result', exist_ok=True)
 
-
+ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'mp4'}
 
 ############### give every image name ###############
 # def generate_unique_filename(filename):
@@ -34,6 +35,9 @@ os.makedirs('result', exist_ok=True)
 #     unique_filename = str(uuid.uuid4()) + extension
 #     return unique_filename
 ####################################################
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/')
 def home():
@@ -51,77 +55,47 @@ def image_video_predict():
 @app.route("/upload", methods=["GET", "POST"])
 def predict_img():
     if request.method == "POST":
-        if 'file' in request.files:
-            f = request.files['file']
+        if 'file' not in request.files:
+            return "No file part", 400
+        
+        f = request.files['file']
+        if f.filename == '':
+            return "No selected file", 400
+        
+        if allowed_file(f.filename):
             basepath = os.path.dirname(__file__)
-            filepath = os.path.join(basepath,'uploads',f.filename)
-            f.save(filepath)
+            upload_path = os.path.join(basepath, 'uploads', f.filename)
+            f.save(upload_path)
 
-            ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'mp4'}
-                                                
-            if f.filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS:
-                file_extension = f.filename.rsplit('.', 1)[1].lower()
-            
+            logging.debug(f"File saved to: {upload_path}")
+
+            file_extension = f.filename.rsplit('.', 1)[1].lower()
+            result_path = os.path.join(basepath, 'runs/detect', f.filename)
+
+            # Create the directory if it doesn't exist
+            result_dir = os.path.dirname(result_path)
+            if not os.path.exists(result_dir):
+                os.makedirs(result_dir)
+
             if file_extension in ['jpeg', 'jpg', 'png']:
-                img = cv2.imread(filepath)
+                img = cv2.imread(upload_path)
                 detections = model_yolov8(img, save=True)
-                result_result_image = detections[0].plot()
-                result_path = os.path.join('results' + f.filename)
+                result_image = detections[0].plot()
+
+                if cv2.imwrite(result_path, result_image):
+                    image_url = result_path
+                    logging.debug(f"Image saved successfully: {result_path}")
+                else:
+                    logging.error("Failed to save image.")
+                    return "Error processing image", 500
 
             elif file_extension == 'mp4': 
-                    video_path = filepath
-                    cap = cv2.VideoCapture(video_path)
+                # Handle video processing here
+                pass
 
-                    frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                    frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-                                
-                    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-                    out = cv2.VideoWriter('output.mp4', fourcc, 30.0, (frame_width, frame_height))
-                    
-                    while cap.isOpened():
-                        ret, frame = cap.read()
-                        if not ret:
-                            break                                                      
+            return render_template('upload_web.html', image_url=image_url)
 
-                        results_car_object = model_yolov5(frame, save=True)
-                        results_wet_dry = model_yolov8_2(frame, save=True)
-                        print(results_car_object)
-                        cv2.waitKey(1)
-
-                        res_plotted = results_car_object[0].plot()
-
-                    cap.release()
-                    out.release()
-
-                    return videos_feed()
-
-        folder_path = 'runs/detect/'
-        subfolders = [f for f in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path, f))]    
-        latest_subfolder = max(subfolders, key=lambda x: os.path.getctime(os.path.join(folder_path, x)))   
-        image_path = folder_path+'/'+latest_subfolder+'/'+f.filename
-
-        return render_template('upload_web.html', image_pred1=result_path, image_path=image_path)
-
-    # return render_template('index.html', image_path=None)
-    
-# if f:
-            #     unique_filename = generate_unique_filename(f.filename)
-            #     original_image_path = os.path.join(base_dir, 'originals', unique_filename)
-            #     f.save(original_image_path)
-
-            #     # Model 1
-            #     results1 = model_yolov8(original_image_path)
-            #     result_image1 = results1[0].plot()
-            #     result_path1 = os.path.join(base_dir, 'results_model1', 'result_model1_' + unique_filename)
-            #     Image.fromarray(result_image1[..., ::-1]).save(result_path1)
-
-            #     # Model 2
-            #     gray_image = cv2.imread(original_image_path)
-            #     gray_image = cv2.cvtColor(gray_image, cv2.COLOR_BGR2GRAY)
-            #     result2 = model_yolov8_2(original_image_path)
-            #     result_image2 = result2[0].plot()
-            #     result_path2 = os.path.join(base_dir, 'results_model2', 'result_model2_' + unique_filename)
-            #     Image.fromarray(result_image2[..., ::-1]).save(result_path2)
+    return render_template('upload_web.html')
 
 ############### video ###############
 detected_items = []
