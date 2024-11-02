@@ -52,7 +52,8 @@
               <div class="card-body">
                 <div class="tab-content p-0">
                   <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 700px;">
-                    <form action="/upload" class="form-signin col-lg-3" method=post enctype=multipart/form-data name="form1">
+                    <form action="/upload" class="form-signin col-lg-3" method=post enctype=multipart/form-data
+                      name="form1">
 
                       <h1 class="h3 mb-3 font-weight-normal">Upload any image or video</h1>
 
@@ -76,12 +77,10 @@
               <div class="card-body">
                 <div class="tab-content p-0">
                   <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 700px;">
-                    {% if image_url %}
-                    <img src="{{ image_url }}" alt="Result" style="height:640px; width:640px;">
+                    {% if image_url%}
+                    <img src="{{ image_url }}" alt="Uploaded Image" style="height:690px; width:690px;">
                     {% else %}
-                    <p>No image to display.</p>
-                    <!-- <img id="my-video-image" src="{{ url_for('video_feed') }}" alt="Video Result"
-                      style="height:640px; width:640px;"> -->
+                    <img src="{{ url_for('video_feed') }}" alt="Uploaded video" style="height:690px; width:690px;">
                     {% endif %}
                   </div>
                 </div>
