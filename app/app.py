@@ -23,9 +23,9 @@ model_yolov8_2 = YOLO('model/wet_dry.pt')
 
 link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
 
-os.makedirs('runs/detect', exist_ok=True)
-os.makedirs('uploads', exist_ok=True)
-#os.makedirs('result', exist_ok=True)
+# os.makedirs('runs/detect', exist_ok=True)
+os.makedirs('static/uploads', exist_ok=True)
+os.makedirs('static/result', exist_ok=True)
 
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'mp4'}
 
@@ -64,36 +64,63 @@ def predict_img():
         
         if allowed_file(f.filename):
             basepath = os.path.dirname(__file__)
-            upload_path = os.path.join(basepath, 'uploads', f.filename)
-            f.save(upload_path)
-
-            logging.debug(f"File saved to: {upload_path}")
+            filepath = os.path.join(basepath, 'static', 'uploads', f.filename)
+            f.save(filepath)
 
             file_extension = f.filename.rsplit('.', 1)[1].lower()
-            result_path = os.path.join(basepath, 'runs/detect', f.filename)
 
-            # Create the directory if it doesn't exist
-            result_dir = os.path.dirname(result_path)
-            if not os.path.exists(result_dir):
-                os.makedirs(result_dir)
-
+            ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'mp4'}
+                                                
+            if f.filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS:
+                file_extension = f.filename.rsplit('.', 1)[1].lower()
+            
             if file_extension in ['jpeg', 'jpg', 'png']:
-                img = cv2.imread(upload_path)
-                detections = model_yolov8(img, save=True)
-                result_image = detections[0].plot()
+                img = cv2.imread(filepath)
+                models = ['model_yolov5', 'model_yolov8']
+                results_paths = []
 
-                if cv2.imwrite(result_path, result_image):
-                    image_url = result_path
-                    logging.debug(f"Image saved successfully: {result_path}")
-                else:
-                    logging.error("Failed to save image.")
-                    return "Error processing image", 500
+                for model_name in models:
+                    model = globals()[model_name]
+                    detections = model(img)
+                    result = detections[0].plot()
+                    
+                    # Generate a unique filename for each model
+                    result_filename = f"{os.path.splitext(f.filename)[0]}_{model_name}.jpg"
+                    result_path = os.path.join('static', 'result', result_filename)
+                    
+                    cv2.imwrite(result_path, result)
+                    results_paths.append(result_path)
+
+# `results_paths` now contains the paths to all processed images
 
             elif file_extension == 'mp4': 
-                # Handle video processing here
-                pass
+                    video_path = filepath
+                    cap = cv2.VideoCapture(video_path)
 
-            return render_template('upload_web.html', image_url=image_url)
+                    frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                    frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                                
+                    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+                    out = cv2.VideoWriter('output.mp4', fourcc, 30.0, (frame_width, frame_height))
+                    
+                    while cap.isOpened():
+                        ret, frame = cap.read()
+                        if not ret:
+                            break                                                      
+
+                        results_car_object = model_yolov5(frame)
+                        results_wet_dry = model_yolov8_2(frame)
+                        print(results_car_object)
+                        cv2.waitKey(1)
+
+                        res_plotted = results_car_object[0].plot()
+
+                    cap.release()
+                    out.release()
+
+                    return videos_feed()
+
+        return render_template('upload_web.html', image_url=result_path)
 
     return render_template('upload_web.html')
 
@@ -147,7 +174,7 @@ def generate_rtsp_stream():
         ret, frame = cap.read()
         if not ret:
             break
-
+        
         results = model_yolov5(frame)
         annotated_frame = results[0].plot()
 
@@ -165,22 +192,25 @@ def generate_rtsp_stream():
 def live_detect():
     detected_items = []
     cap = cv2.VideoCapture(link)
-    
+    models = ['model_yolov5', 'model_yolov8_2']
+
     try:
         ret, frame = cap.read()
         if ret:
-            results = model_yolov5(frame)
-            if results and hasattr(results[0], 'boxes'):
-                detected_items = [results[0].names[int(box[5])] for box in results[0].boxes.data]
-            else:
-                logging.error("結果格式不正確或缺少 'boxes'")
+            for model_name in models:
+                model = globals()[model_name]
+                results = model(frame)
+                if results and hasattr(results[0], 'boxes'):
+                    detected_items.extend([results[0].names[int(box[5])] for box in results[0].boxes.data])
+                else:
+                    logging.error("結果格式不正確或缺少 'boxes'")
         else:
             logging.error("無法從視頻流讀取幀")
     except Exception as e:
         logging.error(f"實時檢測錯誤: {str(e)}")
     finally:
         cap.release()
-    
+
     return jsonify(detected_items=detected_items)
 
 
