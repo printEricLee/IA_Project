@@ -91,8 +91,6 @@ def predict_img():
                     cv2.imwrite(result_path, result)
                     results_paths.append(result_path)
 
-# `results_paths` now contains the paths to all processed images
-
             elif file_extension == 'mp4': 
                     video_path = filepath
                     cap = cv2.VideoCapture(video_path)
