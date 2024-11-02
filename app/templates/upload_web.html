@@ -52,13 +52,39 @@
               <div class="card-body">
                 <div class="tab-content p-0">
                   <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 700px;">
-                    <form action="/upload" class="form-signin col-lg-3" method=post enctype=multipart/form-data name="form1">
+                    <!-- <form action="/upload" class="form-signin col-lg-3" method=post enctype=multipart/form-data
+                      name="form1" id="loading-message">
 
                       <h1 class="h3 mb-3 font-weight-normal">Upload any image or video</h1>
 
                       <input type="file" name="file" class="form-control-file" id="inputfile">
 
-                      <button class="btn btn-block btn-default btn-sm " type="submit">Upload</button </form>
+                      <button class="btn btn-block btn-default btn-sm " type="submit">Upload</button>
+                    </form> -->
+
+                    <div class="container mt-5" id="loading-message">
+                      <div class="row justify-content-center">
+                        <div class="col-md-6">
+                          <form action="/upload" method="post" enctype="multipart/form-data" class="card shadow p-3 mb-5 bg-white rounded">
+                            <div class="card-body">
+                              <h2 class="text-center">上傳圖片或視頻</h2>
+                              <p class="card-text text-center">請選擇您想要上傳的文件</p>
+                              <input type="file" name="file" class="form-control-file" id="inputFile">
+                              <button class="btn btn-primary btn-block mt-3 w-100" type="submit">上傳</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                    
+
+                    <div id="itemList" style="display: none;">
+                      <div class="item not-detected" id="Dump-truck">卸土車</div>
+                      <div class="item not-detected" id="Person">人</div>
+                      <div class="item not-detected" id="Other-truck">Other-truck</div>
+                      <div class="item not-detected" id="wet">Wet detected</div>
+                    </div>
+
                   </div>
                 </div>
               </div>
@@ -76,12 +102,12 @@
               <div class="card-body">
                 <div class="tab-content p-0">
                   <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 700px;">
-                    {% if image_url %}
-                    <img src="{{ image_url }}" alt="Result" style="height:640px; width:640px;">
+                    {% if image_url%}
+                    <img id="image" src="{{ image_url }}" alt="Uploaded Image" style="height:690px; width:690px;"
+                      onload="hide_word(); show_boxes()">
                     {% else %}
-                    <p>No image to display.</p>
-                    <!-- <img id="my-video-image" src="{{ url_for('video_feed') }}" alt="Video Result"
-                      style="height:640px; width:640px;"> -->
+                    <img id="video" src="{{ url_for('video_feed') }}" alt="Uploaded video"
+                      style="height:690px; width:690px;" onload="hide_word(); show_boxes()">
                     {% endif %}
                   </div>
                 </div>
