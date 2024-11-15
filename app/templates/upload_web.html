@@ -30,7 +30,7 @@
         <div class="row mb-2">
           <div class="col-sm-6">
             <a class="m-0 text-dark text-dark" href="{{ url_for('home')}}">
-              <h1>Home</h1>
+              <h1>&#9825;</h1>
             </a>
           </div>
         </div>
@@ -52,20 +52,11 @@
               <div class="card-body">
                 <div class="tab-content p-0">
                   <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 700px;">
-                    <!-- <form action="/upload" class="form-signin col-lg-3" method=post enctype=multipart/form-data
-                      name="form1" id="loading-message">
-
-                      <h1 class="h3 mb-3 font-weight-normal">Upload any image or video</h1>
-
-                      <input type="file" name="file" class="form-control-file" id="inputfile">
-
-                      <button class="btn btn-block btn-default btn-sm " type="submit">Upload</button>
-                    </form> -->
-
                     <div class="container mt-5" id="loading-message">
-                      <div class="row justify-content-center">
-                        <div class="col-md-6">
-                          <form action="/upload" method="post" enctype="multipart/form-data" class="card shadow p-3 mb-5 bg-white rounded">
+                      <div class="row justify-content-between rounded">
+                        <div class="col-md-9">
+                          <form action="/upload" method="post" enctype="multipart/form-data"
+                            class="card shadow p-3 mb-5 bg-white rounded">
                             <div class="card-body">
                               <h2 class="text-center">上傳圖片或視頻</h2>
                               <p class="card-text text-center">請選擇您想要上傳的文件</p>
@@ -76,7 +67,7 @@
                         </div>
                       </div>
                     </div>
-                    
+
 
                     <div id="itemList" style="display: none;">
                       <div class="item not-detected" id="Dump-truck">卸土車</div>
@@ -118,6 +109,12 @@
       </div>
     </section>
   </div>
+
+  <footer class="bg-dark py-4 mt-auto">
+    <div class="text-center justify-content-between flex-column flex-sm-row">
+      <div class="small m-0 text-white"> &copy;Chun Wo Construction and Engineering Co. Ltd. </div>
+    </div>
+  </footer>
 </body>
 
 </html>
