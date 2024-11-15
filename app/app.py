@@ -2,39 +2,34 @@ from flask import Flask, render_template, request, redirect, Response, jsonify, 
 from ultralytics import YOLO
 import cv2
 import os
-from PIL import Image
-import uuid
-import threading
 import time
-import subprocess
 import logging
 import os
 import logging
+import numpy as np
 
-# f is the file name 
+# -*- coding: utf-8 -*-
+
+############################
+# f is the file you upload #
+############################
 
 app = Flask(__name__)
 
-model_yolov8 = YOLO('model/Iteam_object.pt')
+# model_yolov8 = YOLO('model/Iteam_object.pt')
 
 model_yolov5 = YOLO('model/For_video.pt')
 
 model_yolov8_2 = YOLO('model/wet_dry.pt')
 
-link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
+model_yolov8 = YOLO('model/yolo11x.pt')
 
-# os.makedirs('runs/detect', exist_ok=True)
+live_link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
+
 os.makedirs('static/uploads', exist_ok=True)
 os.makedirs('static/result', exist_ok=True)
 
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'mp4'}
-
-############### give every image name ###############
-# def generate_unique_filename(filename):
-#     _, extension = os.path.splitext(filename)
-#     unique_filename = str(uuid.uuid4()) + extension
-#     return unique_filename
-####################################################
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -42,14 +37,6 @@ def allowed_file(filename):
 @app.route('/')
 def home():
     return render_template('index.html')
-
-@app.route("/liveDetect")
-def liveDetect():
-    return render_template('LiveDetect.html')
-    
-@app.route("/upload")
-def image_video_predict():
-    return render_template('upload_web.html')
 
 ############### image ###############
 @app.route("/upload", methods=["GET", "POST"])
@@ -84,7 +71,6 @@ def predict_img():
                     detections = model(img)
                     result = detections[0].plot()
                     
-                    # Generate a unique filename for each model
                     result_filename = f"{os.path.splitext(f.filename)[0]}_{model_name}.jpg"
                     result_path = os.path.join('static', 'result', result_filename)
                     
@@ -118,9 +104,12 @@ def predict_img():
 
                     return videos_feed()
 
+     
         return render_template('upload_web.html', image_url=result_path)
+    
+    else:
 
-    return render_template('upload_web.html')
+        return render_template('upload_web.html')
 
 ############### video ###############
 detected_items = []
@@ -139,8 +128,7 @@ def get_frame():
                b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n\r\n')   
         time.sleep(0.1)
 
-############### live ###############
-@app.route('/videos_feed')
+@app.route('/videos_feed/<path:video_path>')
 def videos_feed(video_path):
     cap = cv2.VideoCapture(video_path)
     while cap.isOpened():
@@ -150,67 +138,61 @@ def videos_feed(video_path):
 
         results = model_yolov5(frame)
         if results:
-            annotated_frame = results[0].plot()
-            detected_items = [annotated_frame[0].names[int(box[5])] for box in annotated_frame[0].boxes.data]
+            detected_items = [results[0].names[int(box.cls)] for box in results[0].boxes]
             frame_bytes = detected_items.tobytes()
 
+            ret, buffer = cv2.imencode('.jpg', annotated_frame)
+            frame_bytes = buffer.tobytes()
             yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
     
     return jsonify(detected_items=detected_items)
 
-# @app.route('/get_detection_results', methods=['GET'])
-# def get_detection_results():
-#     global detected_items
-#     print("當前檢測到的項目:", detected_items)
-#     return jsonify(detected_items=list(set(detected_items)))
+############### live ###############
+def live_detect(live_link):
+    cap = cv2.VideoCapture(live_link)
 
-def generate_rtsp_stream():
-    cap = cv2.VideoCapture(link)
+    if not cap.isOpened():
+        print("无法打开摄像头")
+        exit()
 
-    while cap.isOpened():
+    while True:
         ret, frame = cap.read()
         if not ret:
+            print("无法读取视频帧")
             break
-        
-        results = model_yolov5(frame)
-        annotated_frame = results[0].plot()
+
+        result = model_yolov5(frame)
+
+        annotated_frame = result[0].plot()
 
         ret, buffer = cv2.imencode('.jpg', annotated_frame)
+        if not ret:
+            print("无法编码视频帧")
+            break
         frame_bytes = buffer.tobytes()
 
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
-    # Release resources
     cap.release()
     cv2.destroyAllWindows()
 
 @app.route('/live-detect')
-def live_detect():
+def LiveDetect():
     detected_items = []
-    cap = cv2.VideoCapture(link)
-    models = ['model_yolov5', 'model_yolov8_2']
-
+    cap = cv2.VideoCapture(live_link)
+    
     try:
         ret, frame = cap.read()
         if ret:
-            for model_name in models:
-                model = globals()[model_name]
-                results = model(frame)
-                if results and hasattr(results[0], 'boxes'):
-                    detected_items.extend([results[0].names[int(box[5])] for box in results[0].boxes.data])
-                else:
-                    logging.error("結果格式不正確或缺少 'boxes'")
-        else:
-            logging.error("無法從視頻流讀取幀")
-    except Exception as e:
-        logging.error(f"實時檢測錯誤: {str(e)}")
+            results = model_yolov5(frame)
+            if results and hasattr(results[0], 'boxes'):
+                detected_items = [results[0].names[int(box[5])] for box in results[0].boxes.data]
     finally:
-        cap.release()
-
+        cap.release() 
     return jsonify(detected_items=detected_items)
-
 
 # function to display the detected objects video on html page
 @app.route("/video_feed")
@@ -220,7 +202,7 @@ def video_feed():
 
 @app.route('/rtsp_feed')
 def rtsp_feed():
-    return Response(generate_rtsp_stream(), 
+    return Response(live_detect(live_link), 
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
