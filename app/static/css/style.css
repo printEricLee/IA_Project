@@ -1,5 +1,10 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
 
+/* 
+# (id)
+. (class) 
+*/
+
 body {
     font-family: "Poppins", sans-serif;
 }
@@ -14,6 +19,77 @@ body {
     width: 100%;
     z-index: 1;
     left: 0;
+}
+
+.image-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.image-container img {
+    width: 100%;
+    transition: filter 0.5s ease;
+}
+
+.image-container:hover img {
+    filter: blur(5px);
+}
+
+.overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 24px;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.image-container:hover .overlay {
+    opacity: 1;
+}
+
+.container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.video-container {
+    flex: 1;
+    margin-right: 20px;
+}
+
+.list-container {
+    width: 300px;
+}
+
+.detection-list {
+    list-style-type: none;
+    padding: 0;
+    text-align: center;
+}
+
+.detected {
+    background-color: red;
+    color: white;
+    padding: 10px;
+    margin: 5px 0;
+}
+
+.not-detected {
+    background-color: grey;
+    color: white;
+    padding: 10px;
+    margin: 5px 0;
+}
+
+#yes-no-box {
+    font-size: 24px;
+    padding: 10px;
+    margin-top: 20px;
+    transition: background-color 0.3s, color 0.3s;
 }
 
 /* @media screen {
@@ -104,28 +180,3 @@ body {
     margin-top: 20px;
     transition: background-color 0.3s, color 0.3s;
 } */
-
-.image-container {
-    position: relative;
-    overflow: hidden;
-}
-.image-container img {
-    width: 100%;
-    transition: filter 0.5s ease;
-}
-.image-container:hover img {
-    filter: blur(5px);
-}
-.overlay {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: white;
-    font-size: 24px;
-    opacity: 0;
-    transition: opacity 0.5s ease;
-}
-.image-container:hover .overlay {
-    opacity: 1;
-}
