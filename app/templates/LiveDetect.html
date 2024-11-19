@@ -58,8 +58,6 @@
                                             <img src="{{ url_for('rtsp_feed') }}" alt="RTSP Stream"
                                                 onload="show_boxes()" style="width: 900px;" />
                                         </div>
-
-
                                     </div>
                                 </div>
                             </div>
@@ -80,11 +78,11 @@
                                         style="position: relative; height: 700px;">
                                         <div class="list-container">
                                             <ul id="detection-list" class="detection-list text-center">
-                                                <li data-item="stone" class="not-detected">rock</li>
-                                                <li data-item="dirt" class="not-detected">dict</li>
-                                                <li data-item="Person" class="not-detected">Person</li>
-                                                <li data-item="wet" class="not-detected">wet detected</li>
-                                                <li data-item="Dump-truck" class="not-detected">car</li>
+                                                <li data-item="rock" class="not-detected">rock</li>
+                                                <li data-item="slurry-soil" class="not-detected">slurry-soil</li>
+                                                <li data-item="person" class="not-detected">person</li>
+                                                <li data-item="slurry-wet" class="not-detected">wet</li>
+                                                <li data-item="truck" class="not-detected">truck</li>
                                             </ul>
                                             <div id="yes-no-container" class="text-center">
                                                 <div id="yes-no-box" class="not-detected">No</div>
@@ -105,66 +103,6 @@
             <div class="small m-0 text-white"> &copy;Chun Wo Construction and Engineering Co. Ltd. </div>
         </div>
     </footer>
-
-    <script>
-        setTimeout(function () {
-            location.reload();
-        }, 120000);
-
-        setTimeout(function () {
-            location.reload();
-        }, 120000);
-
-        // 更新檢測狀態的函數
-        function updateDetectionStatus(detectedItems) {
-            const items = document.querySelectorAll('#detection-list li');
-            const yesNoBox = document.getElementById('yes-no-box');
-            const rtspStream = document.getElementById('rtsp-stream');
-
-            let truckDetected = false;
-
-            items.forEach(item => {
-                const itemName = item.getAttribute('data-item');
-                if (detectedItems.includes(itemName)) {
-                    item.classList.remove('not-detected');
-                    item.classList.add('detected');
-                    if (itemName === 'Dump-truck') {
-                        truckDetected = true;
-                    }
-                } else {
-                    item.classList.remove('detected');
-                    item.classList.add('not-detected');
-                }
-            });
-
-            // Check for truck detection
-            if (truckDetected) {
-                yesNoBox.textContent = "Yes";
-                yesNoBox.classList.remove('not-detected');
-                yesNoBox.classList.add('detected');
-                yesNoBox.style.backgroundColor = 'green';
-                yesNoBox.style.color = 'white';
-                rtspStream.style.display = 'block';
-            } else {
-                yesNoBox.textContent = "No";
-                yesNoBox.classList.remove('detected');
-                yesNoBox.classList.add('not-detected');
-                yesNoBox.style.backgroundColor = 'red';
-                yesNoBox.style.color = 'white';
-                rtspStream.style.display = 'none';
-            }
-        }
-
-        setInterval(() => {
-            fetch('/live-detect')
-                .then(response => response.json())
-                .then(data => {
-                    const detectedItems = data.detected_items;
-                    updateDetectionStatus(detectedItems);
-                })
-                .catch(error => console.error('Error fetching detection data:', error));
-        }, 5000);
-    </script>
 </body>
 
 </html>
