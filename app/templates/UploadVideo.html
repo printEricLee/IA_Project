@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video detection</title>
+
+  <!-- js -->
+  <script src="static/js/script.js" type="text/javascript"></script>
+
+  <!-- css -->
+  <link rel="stylesheet" href="static/css/style.css" />
+
+  <!-- google fonts and css -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Madimi+One&display=swap" rel="stylesheet" />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <style>
+    body {
+      background: white;
+    }
+
+    .loader {
+      width: 250px;
+      height: 50px;
+      line-height: 50px;
+      text-align: center;
+      font-family: helvetica, arial, sans-serif;
+      text-transform: uppercase;
+      font-weight: 900;
+      color: #ce4233;
+      letter-spacing: 0.2em;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .loader::before,
+    .loader::after {
+      content: "";
+      display: block;
+      width: 15px;
+      height: 15px;
+      background: #ce4233;
+      position: absolute;
+      animation: load 0.9s infinite alternate ease-in-out;
+    }
+
+    .loader::before {
+      top: 0;
+    }
+
+    .loader::after {
+      bottom: 0;
+    }
+
+    @keyframes load {
+      0% {
+        left: 0;
+        height: 30px;
+        width: 15px;
+      }
+
+      50% {
+        height: 8px;
+        width: 40px;
+      }
+
+      100% {
+        left: 235px;
+        height: 30px;
+        width: 15px;
+      }
+    }
+
+    #content {
+      display: block;
+      /* 初始隱藏內容 */
+    }
+  </style>
+
+  <script>
+    function loadStream() {
+      document.getElementById("loading").style.display = "block";
+    }
+
+    function hideStream() {
+      document.getElementById("loading").style.display = "none";
+    }
+  </script>
+
+</head>
+
+<body>
+
+  <!-- loading message -->
+  <div class="loader" id="loading">Loading...</div>
+
+  <div>
+    <div id="header">
+      <span style="font-size: 30px; cursor: pointer" onclick="openMenu()"> &#9776; </span>
+    </div>
+    <div class="setMenu" id="menu">
+      <a href="javascript:void(0)" class="close" onclick="closeMenu()">&times;</a>
+      <a href="/">首頁</a>
+      <a href="/liveDetect">實時檢測</a>
+      <a href="/vidpred">影片檢測</a>
+      <a href="/objectDetection">圖像檢測</a>
+    </div>
+  </div>
+
+  <!--  -->
+  <section class="content" style="margin-top: 80px;">
+    <div class="container-fluid">
+      <div class="row">
+        <section class="col-lg-9 connectedSortable">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-chart-pie mr-1"></i>
+                Object Detection
+              </h3>
+            </div>
+
+            <div class="card-body">
+              <div class="tab-content p-0">
+                <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 700px;">
+
+                  {% if video_feed %}
+                  <img src="{{ url_for('video_feed', filename=filename) }}" alt="Uploaded video"
+                    onload="hide_word(); hideStream()" />
+                  {% endif %}
+
+                  <!-- Your main content -->
+                  <div id="main-content">
+                    <!-- Your website content here -->
+                  </div>
+
+                  <div class="container mt-5" id="loading-message">
+                    <div class="row justify-content-between rounded">
+                      <div class="col-md-9">
+
+                        <form action="/vidpred" method="post" enctype="multipart/form-data"
+                          class="card shadow p-3 mb-5 bg-white rounded" id="loading-message">
+                          <div class="card-body">
+                            <h2 class="text-center">上傳圖片或視頻</h2>
+                            <p class="card-text text-center">請選擇您想要上傳的文件</p>
+                            <input type="file" name="video" class="form-control-file" id="inputFile" accept="video/*">
+                            <button class="btn btn-primary btn-block mt-3 w-100" type="submit"
+                              onclick="loadStream()">上傳</button>
+                          </div>
+                        </form>
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </section>
+
+        <section class="col-lg-3 connectedSortable">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-chart-pie mr-1"></i>
+                Object Detection Results
+              </h3>
+            </div>
+
+            <div class="card-body">
+              <div class="tab-content p-0">
+                <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 700px;">
+
+                  <ul id="image-detection-list" class="detection-list text-center">
+                    <li data-item="rock" class="not-detected">rock</li>
+                    <li data-item="slurry-soil" class="not-detected">slurry-soil</li>
+                    <li data-item="Non-inert" class="not-detected">Non-inert</li>
+                    <li data-item="inert" class="not-detected">inert</li>
+                    <li data-item="slurry; wet" class="not-detected">wet</li>
+                    <li data-item="truck" class="not-detected">truck</li>
+                  </ul>
+
+                  <div id="yes-no-container" class="text-center">
+                    <div id="yes-no-box" class="not-detected">No</div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+  </div>
+
+  <footer class="bg-dark py-4 mt-auto">
+    <div class="text-center justify-content-between flex-column flex-sm-row">
+      <div class="small m-0 text-white"> &copy;Chun Wo Construction and Engineering Co. Ltd. </div>
+    </div>
+  </footer>
+</body>
+
+</html>
