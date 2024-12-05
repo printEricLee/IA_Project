@@ -1,6 +1,14 @@
 services:
   fyp:
     platform: linux/amd64
+    image: nvidia/cuda:12.3.1-base-ubuntu20.04
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     build:
       context: ./app
       dockerfile: dockerfile
