@@ -1,16 +1,9 @@
 FROM ultralytics/ultralytics:latest
 
-RUN pip install --upgrade pip && \
-    pip install \
-    ultralytics \
-    flask \
-    opencv-python \
-    Flask-SocketIO \
-    tensorflow \
-    numpy
-
 WORKDIR /app
 
-COPY . .
+RUN pip install --upgrade pip && \
+    pip install ultralytics flask opencv-python Flask-SocketIO && \
+    rm -rf /root/.cache/pip
 
 CMD ["python3", "app.py"]
