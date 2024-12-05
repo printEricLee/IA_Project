@@ -18,7 +18,6 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - INTEL_VISIBLE_DEVICES=all
-      - USE_NO_GPU=true
     shm_size: '15gb'
     ports:
       - 8080:8080
