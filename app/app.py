@@ -77,25 +77,25 @@ def imgpred():
         original_image_path = os.path.join(base_dir, 'originals', unique_filename)
         file.save(original_image_path)
 
-        # 模型 1 检测
-        results1 = model_img(original_image_path)
-        result_image1 = results1[0].plot()
-        result_path1 = os.path.join(base_dir, 'results_model1', 'result_model1_' + unique_filename)
-        Image.fromarray(result_image1[..., ::-1]).save(result_path1)
-        summary1 = summarize_results_model(results1, "Model 1")
-
-        # 模型 2 检测
-        results2 = model_wd(original_image_path)
-        result_image2 = results2[0].plot()
-        result_path2 = os.path.join(base_dir, 'results_model2', 'result_model2_' + unique_filename)
-        Image.fromarray(result_image2[..., ::-1]).save(result_path2)
-        summary2 = summarize_results_model(results2, "Model 2")
+        # 调用通用的处理函数
+        result_path1, summary1 = process_image(original_image_path, model_img, base_dir, 'results_model1', 'Model 1')
+        result_path2, summary2 = process_image(original_image_path, model_wd, base_dir, 'results_model2', 'Model 2')
 
         # 将 original_image_path 作为参数传递
         return render_template('ObjectDetection.html', summary1=summary1, image_pred1=result_path1,
                                summary2=summary2, image_pred2=result_path2, image_path=original_image_path)
 
     return render_template('index.html', image_path=None)
+
+def process_image(image_path, model, base_dir, result_dir_name, model_name):
+    # 模型检测
+    results = model(image_path)
+    result_image = results[0].plot()
+    unique_filename = os.path.basename(image_path)
+    result_path = os.path.join(base_dir, result_dir_name, f'result_{model_name}_{unique_filename}')
+    Image.fromarray(result_image[..., ::-1]).save(result_path)
+    summary = summarize_results_model(results, model_name)
+    return result_path, summary
 
 @app.route('/image-detect')
 def image_detect():
@@ -135,7 +135,7 @@ def get_class_name(class_id, model_name):
         "Model 1": {0: "construction_waste", 1: "rock", 2: "slurry", 3: "soil"},
         "Model 2": {0: "Dry", 1: "Wet"}
     }
-    return class_map[model_name].get(class_id, "Unknown")
+    return class_map.get(model_name, {}).get(class_id, "Unknown")
 
 ########################################
 # 视频检测功能
@@ -166,36 +166,7 @@ def vidpred():
 
     return render_template('UploadVideo.html')
 
-# 生成视频流
-def generate_video_stream(video_path):
-    cap = cv2.VideoCapture(video_path)
-    if not cap.isOpened():
-        logging.error(f"无法打开视频文件：{video_path}")
-        return
-
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        # 对每一帧进行检测和标注
-        results = model_img(frame)
-        if results and hasattr(results[0], 'boxes'):
-            annotated_frame = results[0].plot()
-        else:
-            annotated_frame = frame
-
-        ret, buffer = cv2.imencode('.jpg', annotated_frame)
-        if not ret:
-            continue
-        frame_bytes = buffer.tobytes()
-
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-
-    cap.release()
-
-# 处理视频（后台处理）
+# 处理视频的通用函数
 def process_video(video_path):
     logging.info(f"开始处理视频：{video_path}")
     cap = cv2.VideoCapture(video_path)
@@ -209,11 +180,7 @@ def process_video(video_path):
             break
 
         # 对每一帧进行检测和标注
-        results = model_img(frame)
-        if results and hasattr(results[0], 'boxes'):
-            annotated_frame = results[0].plot()
-        else:
-            annotated_frame = frame
+        annotated_frame = detect_and_annotate_frame(frame, model_img)
 
         # 保存标注后的帧
         save_frame(annotated_frame, frame_number, output_folder)
@@ -223,6 +190,40 @@ def process_video(video_path):
     # 将处理后的帧合成为视频
     create_video_from_images(output_folder)
     logging.info(f"视频处理完成，结果保存在：{output_folder}")
+
+# 检测并标注帧的通用函数
+def detect_and_annotate_frame(frame, model):
+    results = model(frame)
+    if results and hasattr(results[0], 'boxes'):
+        annotated_frame = results[0].plot()
+    else:
+        annotated_frame = frame
+    return annotated_frame
+
+# 生成视频流的通用函数
+def generate_video_stream(video_path):
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        logging.error(f"无法打开视频文件：{video_path}")
+        return
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        # 对每一帧进行检测和标注
+        annotated_frame = detect_and_annotate_frame(frame, model_img)
+
+        ret, buffer = cv2.imencode('.jpg', annotated_frame)
+        if not ret:
+            continue
+        frame_bytes = buffer.tobytes()
+
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
+    cap.release()
 
 # 保存单张帧
 def save_frame(frame, frame_number, output_path):
@@ -257,12 +258,12 @@ def create_video_from_images(image_folder):
 
 @app.route('/rtsp_feed')
 def rtsp_feed():
-    return Response(generate_rtsp_stream(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(generate_stream(link, model_test), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-def generate_rtsp_stream():
-    cap = cv2.VideoCapture(link)
+def generate_stream(video_source, model):
+    cap = cv2.VideoCapture(video_source)
     if not cap.isOpened():
-        logging.error(f"无法连接到 RTSP 流：{link}")
+        logging.error(f"无法连接到视频源：{video_source}")
         return
 
     while True:
@@ -270,11 +271,7 @@ def generate_rtsp_stream():
         if not ret:
             break
 
-        results = model_test(frame, conf=0.5)
-        if results and hasattr(results[0], 'boxes'):
-            annotated_frame = results[0].plot()
-        else:
-            annotated_frame = frame
+        annotated_frame = detect_and_annotate_frame(frame, model)
 
         ret, buffer = cv2.imencode('.jpg', annotated_frame)
         if not ret:
