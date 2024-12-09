@@ -61,7 +61,7 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 app.config['MAIL_USERNAME'] = 'xyxz55124019@gmail.com'     # Gmail 地址
 app.config['MAIL_PASSWORD'] = 'uivh botp tcwb tybz'     # 應用程式密碼
-# app.secret_key = 'DSANO1'
+app.secret_key = 'DSANO_1'
 
 mail = Mail(app)
 
@@ -77,7 +77,7 @@ def send_email(recipient, subject, body, image_path=None):
 
 # 功能：自動發送郵件
 def auto_send_imageResult(summary1, summary2,  image_path):
-    recipient = 'lai.kafuu.chino@gmail.com'  # 替換為實際收件人
+    recipient = 'xyxz55124019@gmail.com'  # 替換為實際收件人
     body = "檢測結果:\n"
 
     items = ['Slurry', 'dirt', 'nothing', 'other', 'stone']
