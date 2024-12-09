@@ -77,7 +77,7 @@ def send_email(recipient, subject, body, image_path=None):
 
 # 功能：自動發送郵件
 def auto_send_imageResult(summary1, summary2,  image_path):
-    recipient = 'xyxz55124019@gmail.com'  # 替換為實際收件人
+    recipient = 'xyxz55124019@gmail.com'
     body = "檢測結果:\n"
 
     items = ['Slurry', 'dirt', 'nothing', 'other', 'stone']
