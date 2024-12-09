@@ -85,6 +85,54 @@
       display: none;
       /* 初始隱藏內容 */
     }
+
+
+    .detection-list {
+      list-style-type: none;
+      padding: 0;
+      margin: 20px 0;
+    }
+
+    .detected {
+      background-color: green;
+      color: white;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 5px;
+    }
+
+    .not-detected {
+      background-color: grey;
+      color: white;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 5px;
+    }
+
+    #yes-no-box {
+      font-size: 24px;
+      padding: 10px;
+      margin-top: 20px;
+      border-radius: 5px;
+      color: white;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .container-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-top: 20px;
+    }
+
+    .image-container {
+      flex: 1;
+      margin-right: 20px;
+    }
+
+    .list-container {
+      flex: 1;
+    }
   </style>
 
   <script>
@@ -182,16 +230,24 @@
                 <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 700px;">
 
                   <div class="list-container">
+                    <h1>檢測結果</h1>
                     <ul id="detection-list" class="detection-list text-center">
-                      <li data-item="stone" class="not-detected">rock</li>
-                      <li data-item="dirt" class="not-detected">dict</li>
-                      <li data-item="Person" class="not-detected">Person</li>
-                      <li data-item="wet" class="not-detected">Wet detected</li>
-                      <li data-item="Other-truck" class="not-detected">Car</li>
+                      <li data-item="Slurry" class="{% if 'Slurry' in summary1 %}detected{% else %}not-detected{% endif %}">Slurry</li>
+                      <li data-item="dirt" class="{% if 'dirt' in summary1 %}detected{% else %}not-detected{% endif %}">dirt</li>  
+                      <li data-item="nothing" class="{% if 'nothing' in summary1 %}detected{% else %}not-detected{% endif %}">nothing</li>
+                      <li data-item="wet" class="{% if 'wet' in summary2 %}detected{% else %}not-detected{% endif %}">wet detected</li>
+                      <li data-item="stone" class="{% if 'stone' in summary1 %}detected{% else %}not-detected{% endif %}">stone</li>
                     </ul>
+            
                     <div id="yes-no-container" class="text-center">
-                      <div id="yes-no-box" class="not-detected">No</div>
+                      <div id="yes-no-box" class="{% if 'wet' in summary2 or 'Slurry' in summary1 %}not-detected{% else %}detected{% endif %}">
+                        {% if 'wet' in summary2 or 'Slurry' in summary1 %} No {% else %} Yes {% endif %}
+                      </div>
                     </div>
+            
+                    {% if "wet" in summary2 %}
+                    <div class="alert alert-primary">Wet condition detected!</div>
+                    {% endif %}
                   </div>
 
                 </div>
@@ -211,8 +267,11 @@
   </footer>
 
   <script>
-    resetButton.addEventListener('click', () => {
-      window.location.href = "{{ url_for('objectDetection') }}";
+    // resetButton.addEventListener('click', () => {
+    //   window.location.href = "{{ url_for('objectDetection') }}";
+    // });
+    document.getElementById('reset-button').addEventListener('click', function() {
+      window.location.href = "{{ url_for('objectDetection') }}"; 
     });
   </script>
 </body>
