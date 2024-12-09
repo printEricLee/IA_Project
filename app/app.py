@@ -61,7 +61,7 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 app.config['MAIL_USERNAME'] = 'xyxz55124019@gmail.com'     # Gmail 地址
 app.config['MAIL_PASSWORD'] = 'uivh botp tcwb tybz'     # 應用程式密碼
-# app.secret_key = '52KafuuChino'                         # 秘密密鑰
+# app.secret_key = 'DSANO1'
 
 mail = Mail(app)
 
