@@ -177,6 +177,7 @@
                 <i class="fas fa-chart-pie mr-1"></i>
                 Object Detection
               </h3>
+              <!-- <button type="button" id="loading-show-message" id="reset-button" style="display: none;">重新上傳</button> -->
             </div>
 
             <div class="card-body">
@@ -184,10 +185,8 @@
                 <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 700px;">
                   {% if image_path %}
                   <img src="{{ image_pred1 }}" alt="模型 1 結果" style="height: 700px;"
-                    onload="hide_word(); hideStream()" />
+                    onload="hide_word(); hideStream();show_word()" />
                   {% endif %}
-
-                  <button type="button" id="reset-button">重新上傳</button>
 
                   <!-- Your main content -->
                   <div id="main-content">
@@ -260,11 +259,11 @@
   </section>
   </div>
 
-  <footer class="bg-dark py-4 mt-auto">
+  <!-- <footer class="bg-dark py-4 mt-auto">
     <div class="text-center justify-content-between flex-column flex-sm-row">
       <div class="small m-0 text-white"> &copy;Chun Wo Construction and Engineering Co. Ltd. </div>
     </div>
-  </footer>
+  </footer> -->
 
   <script>
     // resetButton.addEventListener('click', () => {
