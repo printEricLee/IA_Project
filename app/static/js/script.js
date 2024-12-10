@@ -14,6 +14,11 @@ function hide_word() {
     loadingMessage.style.display = 'none';
 }
 
+function show_word() {
+    const loadingShowMessage = document.getElementById('loading-show-message');
+    loadingShowMessage.style.display = 'flex';
+}
+
 //##############################################################################################
 // live detecting
 
