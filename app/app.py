@@ -50,6 +50,10 @@ def liveDetect():
 def loadindpage():
     return render_template('LoadingPage.html')
 
+@app.route("/template")
+def template():
+    return render_template('template.html')
+
 ########################################
 # Send Email funtion
 ########################################
