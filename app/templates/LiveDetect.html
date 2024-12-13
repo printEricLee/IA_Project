@@ -11,7 +11,7 @@
   <script src="static/js/script.js" type="text/javascript"></script>
 
   <!-- css -->
-  <!-- <link rel="stylesheet" href="static/css/style.css" /> -->
+  <link rel="stylesheet" href="static/css/style.css" />
 
   <!-- google fonts and css -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -86,6 +86,53 @@
   #content {
     display: none;
     /* 初始隱藏內容 */
+  }
+
+  .detection-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 20px 0;
+  }
+
+  .detected {
+    background-color: green;
+    color: white;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+  }
+
+  .not-detected {
+    background-color: grey;
+    color: white;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+  }
+
+  #yes-no-box {
+    font-size: 24px;
+    padding: 10px;
+    margin-top: 20px;
+    border-radius: 5px;
+    color: white;
+    transition: background-color 0.3s, color 0.3s;
+  }
+
+  .container-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 20px;
+  }
+
+  .image-container {
+    flex: 1;
+    margin-right: 20px;
+  }
+
+  .list-container {
+    flex: 1;
   }
 </style>
 
