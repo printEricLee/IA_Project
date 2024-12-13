@@ -215,16 +215,14 @@
 
             <div class="card-body">
               <div class="tab-content p-0">
-                <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 700px;">
-
-                  {% if filename %}
-                  <img id="upload-video" src="{{ url_for('video_feed', filename=filename) }}" alt="Uploaded video"
-                    onload="hide_word(); hideStream()" style="width: 100%; height: auto;" />
-                  {% endif %}
+                <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 720px;">
 
                   <!-- Your main content -->
                   <div id="main-content">
-                    <!-- Your website content here -->
+                    {% if filename %}
+                    <img id="upload-video" src="{{ url_for('video_feed', filename=filename) }}" alt="Uploaded video"
+                      onload="hide_word(); hideStream()" style="width: 100%; height: auto;" />
+                    {% endif %}
                   </div>
 
                   <div class="container mt-5" id="loading-message">
@@ -261,7 +259,7 @@
 
             <div class="card-body">
               <div class="tab-content p-0">
-                <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 700px;">
+                <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 748px;">
 
                   <ul id="image-detection-list" class="detection-list text-center">
                     <li data-item="rock" class="not-detected">rock</li>
@@ -270,6 +268,7 @@
                     <li data-item="inert" class="not-detected">inert</li>
                     <li data-item="slurry; wet" class="not-detected">wet</li>
                     <li data-item="truck" class="not-detected">truck</li>
+                    <li data-item="truck" class="not-detected">collection point</li>
                   </ul>
 
                   <div id="yes-no-container" class="text-center">
