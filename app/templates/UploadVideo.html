@@ -96,50 +96,40 @@
       document.getElementById("loading").style.display = "none";
     }
 
-    document.getElementById('upload-button').addEventListener('click', function () {
-          this.disabled = true;  // Disable the button
-          this.style.display = 'none';  // Hide the button
-          showLoading();  // Show loading spinner
-        });
+    // 獲取檢測結果並更新顯示
+    async function fetchDetectionResults() {
+      const response = await fetch('/get_detection_results');
+      if (response.ok) {
+        const data = await response.json();
+        console.log("檢測到的物體:", data.detected_items);  // 調試打印
+        const detectedItems = data.detected_items;  // 確保這是一個數組
+        updateItemDisplay(detectedItems);
+      } else {
+        console.error('無法獲取檢測結果');
+      }
+    }
 
-        document.querySelector('form').addEventListener('submit', function () {
-          showLoading();
-        });
+    // 更新物品顯示狀態
+    function updateItemDisplay(detectedItems) {
+      const items = {
+        'Dump-truck': document.getElementById('Dump-truck'),
+        'collection point': document.getElementById('collection point'),
+        'Other-truck': document.getElementById('Other-truck'),
+      };
 
-        // 獲取檢測結果並更新顯示
-        async function fetchDetectionResults() {
-            const response = await fetch('/get_detection_results');
-            if (response.ok) {
-                const data = await response.json();
-                console.log("檢測到的物體:", data.detected_items);  // 調試打印
-                const detectedItems = data.detected_items;  // 確保這是一個數組
-                updateItemDisplay(detectedItems);
-            } else {
-                console.error('無法獲取檢測結果');
-            }
+      for (const [item, element] of Object.entries(items)) {
+        if (detectedItems.includes(item)) {
+          element.classList.remove('not-detected');
+          element.classList.add('detected');
+        } else {
+          element.classList.remove('detected');
+          element.classList.add('not-detected');
         }
+      }
+    }
 
-        // 更新物品顯示狀態
-        function updateItemDisplay(detectedItems) {
-            const items = {
-                'Dump-truck': document.getElementById('Dump-truck'),
-                'Person': document.getElementById('Person'),
-                'Other-truck': document.getElementById('Other-truck'),
-            };
-
-            for (const [item, element] of Object.entries(items)) {
-                if (detectedItems.includes(item)) {
-                    element.classList.remove('not-detected');
-                    element.classList.add('detected');
-                } else {
-                    element.classList.remove('detected');
-                    element.classList.add('not-detected');
-                }
-            }
-        }
-
-        // 在頁面加載時獲取檢測結果
-        window.onload = fetchDetectionResults;
+    // 在頁面加載時獲取檢測結果
+    window.onload = fetchDetectionResults;
   </script>
 
 </head>
@@ -182,7 +172,7 @@
 
                   {% if filename %}
                   <img id="upload-video" src="{{ url_for('video_feed', filename=filename) }}" alt="Uploaded video"
-                    onload="hide_word(); hideStream()"  style="width: 100%; height: auto;" />
+                    onload="hide_word(); hideStream()" style="width: 100%; height: auto;" />
                   {% endif %}
 
                   <!-- Your main content -->
