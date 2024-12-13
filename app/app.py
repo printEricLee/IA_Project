@@ -8,6 +8,7 @@ import numpy as np
 from PIL import Image
 import logging
 from flask_mail import Mail, Message
+import random
 
 app = Flask(__name__)
 
@@ -50,7 +51,7 @@ def liveDetect():
 def loadindpage():
     return render_template('LoadingPage.html')
 
-@app.route("/template")
+@app.route('/template')
 def template():
     return render_template('template.html')
 
@@ -59,51 +60,50 @@ def template():
 ########################################
 # 配置 Flask-Mail 使用 Gmail SMTP 伺服器
 # reference : https://github.com/twtrubiks/Flask-Mail-example?tab=readme-ov-file
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USE_SSL'] = False
-app.config['MAIL_USERNAME'] = 'xyxz55124019@gmail.com'     # Gmail 地址
-app.config['MAIL_PASSWORD'] = 'uivh botp tcwb tybz'     # 應用程式密碼
-app.secret_key = 'DSANO_1'
+# app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+# app.config['MAIL_PORT'] = 587
+# app.config['MAIL_USE_TLS'] = True
+# app.config['MAIL_USE_SSL'] = False
+# app.config['MAIL_USERNAME'] = 'xyxz55124019@gmail.com'     # Gmail 地址
+# app.config['MAIL_PASSWORD'] = 'uivh botp tcwb tybz'     # 應用程式密碼
+# app.secret_key = 'DSANO_1'
 
-mail = Mail(app)
+# mail = Mail(app)
 
-# 發送郵件的輔助函數
-def send_email(recipient, subject, body, image_path=None):
-    msg = Message(subject, sender=app.config['MAIL_USERNAME'], recipients=[recipient])
-    msg.body = body
-    # 附加原始圖片
-    if image_path:
-        with app.open_resource(image_path) as fp:
-            msg.attach(os.path.basename(image_path), 'image/jpeg', fp.read())
-    mail.send(msg)
+# # 發送郵件的輔助函數
+# def send_email(recipient, subject, body, image_path=None):
+#     msg = Message(subject, sender=app.config['MAIL_USERNAME'], recipients=[recipient])
+#     msg.body = body
+#     # 附加原始圖片
+#     if image_path:
+#         with app.open_resource(image_path) as fp:
+#             msg.attach(os.path.basename(image_path), 'image/jpeg', fp.read())
+#     mail.send(msg)
 
-# 功能：自動發送郵件
-def auto_send_imageResult(summary1, summary2,  image_path):
-    recipient = 'xyxz55124019@gmail.com'
-    body = "檢測結果:\n"
+# # 功能：自動發送郵件
+# def auto_send_imageResult(summary1, summary2,  image_path):
+#     recipient = 'xyxz55124019@gmail.com'
+#     body = "檢測結果:\n"
 
-    try:
+#     try:
 
-        items = ['Slurry', 'dirt', 'nothing', 'other', 'stone']
-        for item in items:
-            status = '已檢測到' if item in summary1 else '未檢測到'
-            body += f"{item}: {status}\n"
+#         items = ['Slurry', 'dirt', 'nothing', 'other', 'stone']
+#         for item in items:
+#             status = '已檢測到' if item in summary1 else '未檢測到'
+#             body += f"{item}: {status}\n"
 
-        wet_status = '有' if 'wet' in summary2 else '沒有'
-        body += f"潮濕情況檢測: {wet_status}\n"
+#         wet_status = '有' if 'wet' in summary2 else '沒有'
+#         body += f"潮濕情況檢測: {wet_status}\n"
 
-        if 'wet' in summary2:
-            body += "警告: 檢測到潮濕！\n"
+#         if 'wet' in summary2:
+#             body += "警告: 檢測到潮濕！\n"
 
-    finally:
-        if all(item not in summary1 for item in ['Slurry', 'dirt', 'nothing', 'other', 'stone']):
-            body += f"有沒有 確實也沒有"
+#     finally:
+#         if all(item not in summary1 for item in ['Slurry', 'dirt', 'nothing', 'other', 'stone']):
+#             body += f"有沒有 確實也沒有"
 
-    send_email(recipient, "圖片檢測結果", body, image_path)
-    flash('功能1結果郵件已自動發送！', 'success')
-
+#     send_email(recipient, "圖片檢測結果", body, image_path)
+#     flash('功能1結果郵件已自動發送！', 'success')
 
 ########################################
 # 圖片檢測功能
@@ -141,7 +141,7 @@ def imgpred():
         summary2 = summarize_results_model(results2, "Model 2")
 
         #Send email
-        auto_send_imageResult(summary1, summary2, original_image_path)
+        # auto_send_imageResult(summary1, summary2, original_image_path)
 
         return render_template('ObjectDetection.html', summary1=summary1, image_pred1=result_path1,
                                summary2=summary2, image_pred2=result_path2, image_path=original_image_path)
@@ -163,67 +163,6 @@ def image_detect():
         logging.info("未檢測到任何物品")
 
     return jsonify(detected_items=detected_items)
-
-
-# @app.route('/imgpred', methods=['GET', 'POST'])
-# def imgpred():
-#     if request.method == 'POST':
-#         want_json = request.headers.get('Accept') == 'application/json'
-
-#         if 'image' not in request.files or request.files['image'].filename == '':
-#             if want_json:
-#                 return jsonify({'error': 'No image uploaded'}), 400
-#             return redirect(request.url)
-
-#         file = request.files['image']
-#         base_dir = os.path.join('static', 'images')
-#         os.makedirs(os.path.join(base_dir, 'originals'), exist_ok=True)
-#         os.makedirs(os.path.join(base_dir, 'results_model1'), exist_ok=True)
-#         os.makedirs(os.path.join(base_dir, 'results_model2'), exist_ok=True)
-
-#         # Save original image
-#         unique_filename = generate_unique_filename(file.filename)
-#         original_image_path = os.path.join(base_dir, 'originals', unique_filename)
-#         file.save(original_image_path)
-
-#         # Model 1 detection
-#         results1 = model_img(original_image_path)
-#         result_image1 = results1[0].plot()
-#         result_path1 = os.path.join(base_dir, 'results_model1', 'result_model1_' + unique_filename)
-#         Image.fromarray(result_image1[..., ::-1]).save(result_path1)
-#         summary1 = summarize_results_model(results1, "Model 1")
-
-#         # Model 2 detection
-#         results2 = model_wd(original_image_path)
-#         result_image2 = results2[0].plot()
-#         result_path2 = os.path.join(base_dir, 'results_model2', 'result_model2_' + unique_filename)
-#         Image.fromarray(result_image2[..., ::-1]).save(result_path2)
-#         summary2 = summarize_results_model(results2, "Model 2")
-
-#         # Prepare response data
-#         response_data = {
-#             'original_image': original_image_path,
-#             'model1': {
-#                 'result_image': result_path1,
-#                 'summary': summary1
-#             },
-#             'model2': {
-#                 'result_image': result_path2,
-#                 'summary': summary2
-#             }
-#         }
-
-#         if want_json:
-#             return jsonify(response_data), 200
-#         else:
-#             return render_template('ObjectDetection.html', 
-#                                 summary1=summary1, 
-#                                 image_pred1=result_path1,
-#                                 summary2=summary2, 
-#                                 image_pred2=result_path2, 
-#                                 image_path=original_image_path)
-
-#     return render_template('index.html', image_path=None)
 
 # 整理檢測結果
 def summarize_results_model(results, model_name):
@@ -422,6 +361,75 @@ def get_detection_results():
     global detected_items
     print("當前檢測到的項目:", detected_items)  # 輸出當前檢測到的項目
     return jsonify(detected_items=list(set(detected_items)))  # 返回唯一的檢測項目
+
+########################################
+# template功能
+########################################
+
+processing = False  # 處理狀態標誌
+detected_items = []  # 存儲檢測到的物體列表
+
+@app.route('/template_feed')
+def template_feed():
+    folder_path = "static/template/"
+
+    video_paths = [file for file in os.listdir(folder_path) if file.endswith(".mp4")]
+    
+    video_path = os.path.join(folder_path, random.choice(video_paths))
+    print("=====")
+    print(video_path)
+    print("=====")
+
+    return Response(generate_template_frames(video_path),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
+def generate_template_frames(video_path):
+
+    cap = cv2.VideoCapture(video_path)  # 打開影片文件
+
+    while cap.isOpened():  # 當影片仍在打開且正在處理
+        ret, frame = cap.read()  # 讀取一幀
+
+        if not ret:
+            break  # 如果讀取失敗，則退出
+
+        results = model_img(frame, conf=0.6)  # 在幀上運行物體檢測模型
+
+        if results:
+            annotated_frame = results[0].plot()  # 繪製標註幀
+            compressed_frame = compress_frame(annotated_frame)  # 壓縮幀
+            ret, buffer = cv2.imencode('.jpg', compressed_frame)  # 將幀編碼為JPEG格式
+            frame_bytes = buffer.tobytes()  # 轉換為字節流
+
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')  # 發送幀
+
+# @app.route('/templates_feed')
+# def templates_feed(video_path):
+#     cap = cv2.VideoCapture(video_path)  # 打開影片文件
+#     while cap.isOpened():  # 當影片仍在打開且正在處理
+#         ret, frame = cap.read()  # 讀取一幀
+#         if not ret:
+#             break  # 如果讀取失敗，則退出
+
+#         results = model_img(frame, conf=0.6)  # 在幀上運行物體檢測模型
+        
+#         if results:
+#             annotated_frame = results[0].plot()  # 繪製標註幀
+#             detected_items = [results[0].names[int(box[5])] for box in results[0].boxes.data]  # 獲取檢測到的物體名稱
+#             compressed_frame = compress_frame(annotated_frame)  # 壓縮幀
+#             ret, buffer = cv2.imencode('.jpg', compressed_frame)  # 將幀編碼為JPEG格式
+#             frame_bytes = buffer.tobytes()  # 轉換為字節流
+
+#             yield (b'--frame\r\n'
+#                    b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')  # 發送幀
+    
+#     return jsonify(detected_items=detected_items)  # 返回檢測到的物體列表
+
+# @app.route('/template_get_detection_results', methods=['GET'])
+# def template_get_detection_results():
+#     print("當前檢測到的項目:", detected_items)  # Log current detected items
+#     return jsonify(detected_items=list(set(detected_items)))  # Return unique detected items
 
 ########################################
 # 即時檢測功能
