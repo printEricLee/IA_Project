@@ -23,9 +23,9 @@ def generate_unique_filename(filename):
     return str(uuid.uuid4()) + os.path.splitext(filename)[1]
 
 # 靜態檔案處理
-# @app.route('/index.css')
-# def serve_static_file():
-#     return send_from_directory('static', 'index.css')
+@app.route('/index.css')
+def serve_static_file():
+    return send_from_directory('static', 'index.css')
 
 # 首頁
 @app.route('/')
