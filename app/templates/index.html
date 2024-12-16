@@ -24,6 +24,7 @@
 
 	<!-- import JQuery -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
 </head>
 
 <body>
@@ -39,7 +40,7 @@
 			<a href="/objectDetection">圖像檢測</a>
 			<a href="/template">示例</a>
 		</div>
-	</div>	
+	</div>
 
 	<!--  -->
 
@@ -139,7 +140,7 @@
 					<div class="col-lg-4 mb-5">
 						<div class="card h-100 shadow border-0 image-container">
 							<img class="card-img-top" src="{{ url_for('static', filename='img/PredictedImage.png') }}"
-								alt="My Image" />
+								alt="My Image">
 							<div>
 								<a class="text-decoration-none stretched-link overlay" href="{{ url_for('vidpred') }}">
 									<h5>影片檢測</h5>
