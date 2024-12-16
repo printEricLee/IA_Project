@@ -28,8 +28,12 @@ def serve_model_file():
 
 # 靜態檔案處理
 @app.route('/index.css')
-def serve_static_file():
-    return send_from_directory('static', 'index.css')
+def serve_static_css_file():
+    return send_from_directory('static', 'css', 'index.css')
+
+@app.route('/script.js')
+def serve_static_js_file():
+    return send_from_directory('static', 'js', 'script.js')
 
 # 首頁
 @app.route('/')
