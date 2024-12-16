@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, Response, jsonify, send_from_directory, url_for, flash
+from flask import Flask, render_template, request, redirect, Response, jsonify, send_from_directory, url_for, flash, send_file
 from ultralytics import YOLO
 import cv2
 import os
@@ -9,6 +9,7 @@ from PIL import Image
 import logging
 from flask_mail import Mail, Message
 import random
+from io import BytesIO
 
 app = Flask(__name__)
 
@@ -430,7 +431,10 @@ def generate_template_frames(video_path):
 @app.route('/template_image_feed')
 def template_image_feed():
     folder_path = "static/template/"
-    image_paths = [file for file in os.listdir(folder_path) if file.endswith(".jpg")]
+    image_paths = image_paths = [file for file in os.listdir(folder_path) if file.endswith(('.jpg', '.jpeg'))]
+
+    if not image_paths:
+        return "沒有可用的圖像", 404
 
     image_path = os.path.join(folder_path, random.choice(image_paths))
     print("=====")
@@ -440,12 +444,12 @@ def template_image_feed():
     image = cv2.imread(image_path)
     result = model_img(image)
 
-    # 將結果圖片轉換為 Base64
-    _, buffer = cv2.imencode('.jpg', result[0])  # 根據你的模型輸出進行調整
-    result_image = base64.b64encode(buffer).decode('utf-8')
-    result_image_src = f"data:image/jpeg;base64,{result_image}"
+    result_image = result[0].plot()
 
-    return render_template("template(image).html", result_image=result_image_src)
+    _, buffer = cv2.imencode('.jpg', result_image)
+    img_io = BytesIO(buffer)
+
+    return send_file(img_io, mimetype='image/jpeg')
 
 ########################################
 # 即時檢測功能
