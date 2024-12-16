@@ -136,23 +136,18 @@
 
     <script>
         function loadStream() {
-            // 顯示加載動畫
             document.getElementById('loading').style.display = 'block';
 
-            // 創建圖像對象以加載 RTSP 流
             const img = new Image();
             img.src = "{{ url_for('template_feed') }}";
 
             img.onload = function () {
-                // 隱藏加載動畫，顯示實時內容
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('content').style.display = 'block';
-                show_boxes(); // 加載完成後調用 show_boxes()
             };
 
             img.onerror = function () {
-                // 處理錯誤情況
-                alert('無法加載視頻流');
+                alert('error bro');
             };
         }
 
@@ -178,85 +173,85 @@
             <a href="/objectDetection">圖像檢測</a>
             <a href="/template">示例</a>
         </div>
-    </div>
 
-    <!--  -->
-    <section class="content" style="margin-top: 80px;">
-        <div class="container-fluid">
-            <div class="row">
-                <section class="col-lg-9 connectedSortable">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-chart-pie mr-1"></i>
-                                Object Detection
-                            </h3>
-                        </div>
+        <!--  -->
+        <section class="content" style="margin-top: 80px;">
+            <div class="container-fluid">
+                <div class="row">
+                    <section class="col-lg-9 connectedSortable">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-chart-pie mr-1"></i>
+                                    Object Detection
+                                </h3>
+                            </div>
 
-                        <div class="card-body">
-                            <div class="tab-content p-0">
-                                <div class="chart tab-pane active" id="revenue-chart"
-                                    style="position: relative; height: 768px;">
+                            <div class="card-body">
+                                <div class="tab-content p-0">
+                                    <div class="chart tab-pane active" id="revenue-chart"
+                                        style="position: relative; height: 768px;">
 
-                                    <div id="main-content">
-                                        <img src="/template_feed" alt="template" style="width: 100%;" />
-                                    </div>
+                                        <div id="main-content">
+                                            <img src="/template_feed" alt="template" style="width: 100%;" />
+                                        </div>
 
-                                    <div class="container mt-5" id="loading-message">
-                                        <div class="row justify-content-between rounded">
-                                            <div class="col-md-9">
+                                        <div class="container mt-5" id="loading-message">
+                                            <div class="row justify-content-between rounded">
+                                                <div class="col-md-9">
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
 
+                                    </div>
+                                </div>
+                            </div>
+                    </section>
+
+                    <section class="col-lg-3 connectedSortable">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-chart-pie mr-1"></i>
+                                    Object Detection Results
+                                </h3>
+                            </div>
+
+                            <div class="card-body">
+                                <div class="tab-content p-0">
+                                    <div class="chart tab-pane active" id="revenue-chart"
+                                        style="position: relative; height: 748px;">
+
+                                        <ul id="image-detection-list" class="detection-list text-center">
+                                            <li data-item="rock" class="not-detected">rock</li>
+                                            <li data-item="slurry-soil" class="not-detected">slurry-soil</li>
+                                            <li data-item="Non-inert" class="not-detected">Non-inert</li>
+                                            <li data-item="inert" class="not-detected">inert</li>
+                                            <li data-item="slurry; wet" class="not-detected">wet</li>
+                                            <li data-item="truck" class="not-detected">truck</li>
+                                            <li data-item="collection point" class="not-detected">collection point</li>
+                                        </ul>
+
+                                        <div id="yes-no-container" class="text-center">
+                                            <div id="yes-no-box" class="not-detected">No</div>
+                                        </div>
+
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                </section>
-
-                <section class="col-lg-3 connectedSortable">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-chart-pie mr-1"></i>
-                                Object Detection Results
-                            </h3>
-                        </div>
-
-                        <div class="card-body">
-                            <div class="tab-content p-0">
-                                <div class="chart tab-pane active" id="revenue-chart"
-                                    style="position: relative; height: 748px;">
-
-                                    <ul id="image-detection-list" class="detection-list text-center">
-                                        <li data-item="rock" class="not-detected">rock</li>
-                                        <li data-item="slurry-soil" class="not-detected">slurry-soil</li>
-                                        <li data-item="Non-inert" class="not-detected">Non-inert</li>
-                                        <li data-item="inert" class="not-detected">inert</li>
-                                        <li data-item="slurry; wet" class="not-detected">wet</li>
-                                        <li data-item="truck" class="not-detected">truck</li>
-                                        <li data-item="collection point" class="not-detected">collection point</li>
-                                    </ul>
-
-                                    <div id="yes-no-container" class="text-center">
-                                        <div id="yes-no-box" class="not-detected">No</div>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                    </section>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
     </div>
 
     <!-- <footer class="bg-dark py-4 mt-auto">
-    <div class="text-center justify-content-between flex-column flex-sm-row">
-      <div class="small m-0 text-white"> &copy;Chun Wo Construction and Engineering Co. Ltd. </div>
+        <div class="text-center justify-content-between flex-column flex-sm-row">
+        <div class="small m-0 text-white"> &copy;Chun Wo Construction and Engineering Co. Ltd. </div>
+        </div>
+    </footer> -->
     </div>
-  </footer> -->
 </body>
 
 </html>
