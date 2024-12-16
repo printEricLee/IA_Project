@@ -3,7 +3,8 @@
 <p align="center">自卸車運輸物品探測</p>
 
 <main style="text-align: center;">
-<span> model : https://vtcmca-my.sharepoint.com/:f:/g/personal/230170593_stu_vtc_edu_hk/En54lh0BSvZEkYjxwGLJut0ByRUvIe-pVKxYZp38JYOdCw?e=eOWcgC </span>
+
+<div style="display: inline;"> model : https://vtcmca-my.sharepoint.com/:f:/g/personal/230170593_stu_vtc_edu_hk/En54lh0BSvZEkYjxwGLJut0ByRUvIe-pVKxYZp38JYOdCw?e=eOWcgC </div>
 
 ## 使用方法
  
