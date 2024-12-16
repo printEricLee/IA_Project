@@ -81,9 +81,9 @@
             }
         }
 
-        /* #content {
+        #content {
             display: none;
-        } */
+        }
 
         .detection-list {
             list-style-type: none;
@@ -133,12 +133,12 @@
         }
     </style>
 
-    <!-- <script>
+    <script>
         function loadStream() {
             document.getElementById('loading').style.display = 'block';
 
             const img = new Image();
-            img.src = "{{ result_image }}";
+            img.src = "/template_image_feed";
 
             img.onload = function () {
                 document.getElementById('loading').style.display = 'none';
@@ -151,14 +151,14 @@
         }
 
         window.onload = loadStream; // 當頁面加載時開始加載流
-    </script> -->
+    </script>
 
 </head>
 
 <body>
 
     <!-- loading message -->
-    <!-- <div class="loader" id="loading">Loading...</div> -->
+    <div class="loader" id="loading">Loading...</div>
 
     <div id="content">
         <div>
@@ -196,7 +196,7 @@
                                         style="position: relative; height: 768px;">
 
                                         <div id="main-content">
-                                            <img src="{{ result_image }}" alt="template" style="width: 100%;" />
+                                            <img src="/template_image_feed" alt="template" style="max-height: 10%;" />
                                         </div>
 
                                     </div>
