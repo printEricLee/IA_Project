@@ -63,9 +63,13 @@ def liveDetect():
 def loadindpage():
     return render_template('LoadingPage.html')
 
-@app.route('/template')
-def template():
-    return render_template('template.html')
+@app.route('/template_video')
+def template_video():
+    return render_template('template(video).html')
+
+@app.route('/template_image')
+def template_image():
+    return render_template('template(image).html')
 
 ########################################
 # Send Email funtion
