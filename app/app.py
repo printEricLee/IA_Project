@@ -385,51 +385,27 @@ def template_feed():
 
 def generate_template_frames(video_path):
 
-    cap = cv2.VideoCapture(video_path)  # 打開影片文件
+    cap = cv2.VideoCapture(video_path)
 
-    while cap.isOpened():  # 當影片仍在打開且正在處理
-        ret, frame = cap.read()  # 讀取一幀
+    while cap.isOpened():
+        ret, frame = cap.read()
 
         if not ret:
-            break  # 如果讀取失敗，則退出
+            break
 
-        results = model_img(frame, conf=0.6)  # 在幀上運行物體檢測模型
+        results = model_img(frame, conf=0.6)
 
         if results:
-            annotated_frame = results[0].plot()  # 繪製標註幀
-            compressed_frame = compress_frame(annotated_frame)  # 壓縮幀
-            ret, buffer = cv2.imencode('.jpg', compressed_frame)  # 將幀編碼為JPEG格式
-            frame_bytes = buffer.tobytes()  # 轉換為字節流
+            annotated_frame = results[0].plot()
+            compressed_frame = compress_frame(annotated_frame)
+            ret, buffer = cv2.imencode('.jpg', compressed_frame)
+            frame_bytes = buffer.tobytes()
 
             yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')  # 發送幀
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
-# @app.route('/templates_feed')
-# def templates_feed(video_path):
-#     cap = cv2.VideoCapture(video_path)  # 打開影片文件
-#     while cap.isOpened():  # 當影片仍在打開且正在處理
-#         ret, frame = cap.read()  # 讀取一幀
-#         if not ret:
-#             break  # 如果讀取失敗，則退出
-
-#         results = model_img(frame, conf=0.6)  # 在幀上運行物體檢測模型
-        
-#         if results:
-#             annotated_frame = results[0].plot()  # 繪製標註幀
-#             detected_items = [results[0].names[int(box[5])] for box in results[0].boxes.data]  # 獲取檢測到的物體名稱
-#             compressed_frame = compress_frame(annotated_frame)  # 壓縮幀
-#             ret, buffer = cv2.imencode('.jpg', compressed_frame)  # 將幀編碼為JPEG格式
-#             frame_bytes = buffer.tobytes()  # 轉換為字節流
-
-#             yield (b'--frame\r\n'
-#                    b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')  # 發送幀
-    
-#     return jsonify(detected_items=detected_items)  # 返回檢測到的物體列表
-
-# @app.route('/template_get_detection_results', methods=['GET'])
-# def template_get_detection_results():
-#     print("當前檢測到的項目:", detected_items)  # Log current detected items
-#     return jsonify(detected_items=list(set(detected_items)))  # Return unique detected items
+    cap.release()
+    cv2.destroyAllWindows()
 
 ########################################
 # 即時檢測功能
