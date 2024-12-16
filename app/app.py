@@ -379,7 +379,7 @@ def get_detection_results():
     return jsonify(detected_items=list(set(detected_items)))  # 返回唯一的檢測項目
 
 ########################################
-# template功能
+# template(video)功能
 ########################################
 
 processing = False  # 處理狀態標誌
@@ -422,6 +422,30 @@ def generate_template_frames(video_path):
 
     cap.release()
     cv2.destroyAllWindows()
+
+########################################
+# template(image)功能
+########################################
+
+@app.route('/template_image_feed')
+def template_image_feed():
+    folder_path = "static/template/"
+    image_paths = [file for file in os.listdir(folder_path) if file.endswith(".jpg")]
+
+    image_path = os.path.join(folder_path, random.choice(image_paths))
+    print("=====")
+    print(image_path)
+    print("=====")
+
+    image = cv2.imread(image_path)
+    result = model_img(image)
+
+    # 將結果圖片轉換為 Base64
+    _, buffer = cv2.imencode('.jpg', result[0])  # 根據你的模型輸出進行調整
+    result_image = base64.b64encode(buffer).decode('utf-8')
+    result_image_src = f"data:image/jpeg;base64,{result_image}"
+
+    return render_template("template(image).html", result_image=result_image_src)
 
 ########################################
 # 即時檢測功能
