@@ -149,7 +149,7 @@
       // 隱藏加載動畫，顯示實時內容
       document.getElementById('loading').style.display = 'none';
       document.getElementById('content').style.display = 'block';
-      show_boxes(); // 加載完成後調用 show_boxes()
+      // show_boxes(); // 加載完成後調用 show_boxes()
     };
 
     img.onerror = function () {
@@ -198,7 +198,7 @@
 
               <div class="card-body">
                 <div class="tab-content p-0">
-                  <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 720px;">
+                  <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 768px;">
                     <div class="video-container flex-grow-1">
                       <img src="{{ url_for('rtsp_feed') }}" alt="RTSP Stream" style="width: 90%;" />
                     </div>
@@ -243,12 +243,6 @@
         </div>
       </div>
     </section>
-
-    <!-- <footer class="bg-dark py-4 mt-auto">
-      <div class="text-center justify-content-between flex-column flex-sm-row">
-        <div class="small m-0 text-white"> &copy; Chun Wo Construction and Engineering Co. Ltd. </div>
-      </div>
-    </footer> -->
 
 </body>
 
