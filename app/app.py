@@ -26,6 +26,10 @@ def generate_unique_filename(filename):
 def serve_model_file():
     return send_from_directory('model')
 
+@app.route('/template_folder')
+def serve_template_folder():
+    return send_from_directory('static', 'template')
+
 # 靜態檔案處理
 @app.route('/index.css')
 def serve_static_css_file():
