@@ -1,7 +1,7 @@
 services:
   fyp:
     platform: linux/amd64
-    image: nvidia/cuda:12.3.1-base-ubuntu20.04
+    image: nvidia/cuda:12.3.1-base-ubuntu20.04 # get the nvidia cuda image
     deploy:
       resources:
         reservations:
@@ -16,9 +16,8 @@ services:
     volumes:
       - ./app:/app
     environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-      - INTEL_VISIBLE_DEVICES=all
-      - USE_NO_GPU=true
-    shm_size: '15gb'
+      - NVIDIA_VISIBLE_DEVICES=all # allow useing nvidia gpu
+      - INTEL_VISIBLE_DEVICES=all # allow useing intel gpu
+    shm_size: '15gb' # give 15GB RAM 
     ports:
       - 8080:8080
