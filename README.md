@@ -13,7 +13,7 @@ cmd
 
 在cmd中輸入
 ```bash
-docker compose up
+docker compose up --build
 ```
 
 #### 打開 http://127.0.0.1:8080
