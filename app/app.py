@@ -22,6 +22,10 @@ link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
 def generate_unique_filename(filename):
     return str(uuid.uuid4()) + os.path.splitext(filename)[1]
 
+@app.route('/model')
+def serve_model_file():
+    return send_from_directory('model')
+
 # 靜態檔案處理
 @app.route('/index.css')
 def serve_static_file():
