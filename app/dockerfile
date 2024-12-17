@@ -2,13 +2,23 @@ FROM python:3.9-slim as builder
 
 WORKDIR /app
 
+# 先複製 requirements 以利用快取
+COPY requirements.txt .
+
+# 升級 pip 並安裝需求
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# 複製其餘的應用程式代碼
 COPY . .
 
+# 最終階段
 FROM python:3.9-slim
 
 WORKDIR /app
+
+# 從 builder 階段複製已安裝的包
+COPY --from=builder /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
+COPY --from=builder /app/app.py .
 
 CMD ["python3", "app.py"]
