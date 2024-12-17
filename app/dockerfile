@@ -1,15 +1,14 @@
-FROM ultralytics/ultralytics:latest
+FROM python:3.9-slim as builder
 
 WORKDIR /app
 
 RUN pip install --upgrade pip && \
-    pip install \
-    ultralytics \
-    flask \
-    opencv-python \
-    Flask-SocketIO \
-    tensorflow \
-    numpy \
-    Flask-Mail
+    pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+FROM python:3.9-slim
+
+WORKDIR /app
 
 CMD ["python3", "app.py"]
