@@ -143,15 +143,59 @@
             img.onload = function () {
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('content').style.display = 'block';
+
+                // 獲取檢測結果
+                fetch('/template_image_info')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.detections) {
+                            console.log('Detections:', data.detections); // 在控制台中顯示檢測結果
+                            updateDetectionList(data.detections); // 更新檢測列表
+                        }
+                    })
             };
 
-            img.onerror = function () {
-                alert('error bro');
-            };
         }
 
-        window.onload = loadStream; // 當頁面加載時開始加載流
+        function updateDetectionList(detections) {
+            const detectionList = document.getElementById('image-detection-list');
+            const items = detectionList.getElementsByTagName('li');
+
+            // 將所有項目重置為未檢測狀態
+            for (let item of items) {
+                item.className = 'not-detected';
+            }
+
+            let detectedItems = [];
+
+            // 根據檢測結果更新列表
+            detections.forEach(detection => {
+                const item = detectionList.querySelector(`li[data-item="${detection}"]`);
+                if (item) {
+                    item.className = 'detected'; // 更新為檢測狀態
+                    detectedItems.push(detection); // 收集檢測到的項目
+                }
+            });
+
+            // 更新 yes-no-box 根據檢測結果
+            const yesNoBox = document.getElementById('yes-no-box');
+            if (detectedItems.includes(3)) { // 假設 3 代表某個特定的檢測項目
+                yesNoBox.textContent = 'No';
+                yesNoBox.style.backgroundColor = 'green';
+            } else {
+                yesNoBox.textContent = 'Yes';
+                yesNoBox.style.backgroundColor = 'red';
+            }
+        }
+
+        window.onload = loadStream;
     </script>
+
 
 </head>
 
@@ -219,19 +263,14 @@
                                         style="position: relative; height: 748px;">
 
                                         <ul id="image-detection-list" class="detection-list text-center">
-                                            <li data-item="rock" class="not-detected">rock</li>
-                                            <li data-item="slurry-soil" class="not-detected">slurry-soil</li>
+                                            <li data-item="1" class="not-detected">rock</li>
+                                            <li data-item="2" class="not-detected">slurry</li>
+                                            <li data-item="3" class="not-detected">soil</li>
                                             <li data-item="Non-inert" class="not-detected">Non-inert</li>
                                             <li data-item="inert" class="not-detected">inert</li>
-                                            <li data-item="slurry; wet" class="not-detected">wet</li>
-                                            <li data-item="truck" class="not-detected">truck</li>
-                                            <li data-item="collection point" class="not-detected">collection point</li>
+                                            <li data-item="2" class="not-detected">wet</li>
+                                            <li id="yes-no-box" class="not-detected">Yes</li>
                                         </ul>
-
-                                        <div id="yes-no-container" class="text-center">
-                                            <div id="yes-no-box" class="not-detected">No</div>
-                                        </div>
-
                                     </div>
                                 </div>
                             </div>
