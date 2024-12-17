@@ -1,12 +1,6 @@
-FROM python:3.9-slim
+FROM ultralytics/ultralytics:latest
 
 WORKDIR /app
-
-COPY . .
-
-RUN apt-get update && \
-    apt-get install -y libgl1-mesa-glx && \
-    apt-get clean
 
 RUN pip install --upgrade pip && \
     pip install \
