@@ -1,3 +1,5 @@
+ultralytics
 flask
 opencv-python
-ultralytics
+Flask-SocketIO
+Flask-Mail
