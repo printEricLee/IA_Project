@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, Response, jsonify, 
 from ultralytics import YOLO
 import cv2
 import os
-import datetime
+from datetime import datetime
 import uuid
 import threading
 import numpy as np
@@ -15,8 +15,8 @@ from io import BytesIO
 app = Flask(__name__)
 
 # 初始化 YOLO 模型
-model_img = YOLO('model/best.pt')  # 圖像檢測模型
-model_test = YOLO('model/Iteam_object.pt')  # 圖像檢測模型
+model_img = YOLO('model/Iteam_object.pt')  # 圖像檢測模型
+model_truck = YOLO('model/Iteam_object.pt')  # 圖像檢測模型
 model_wd = YOLO('model/wet_dry.pt')        # 濕/乾分類模型
 link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
 
@@ -154,14 +154,20 @@ def imgpred():
         # 模型 1 檢測
         results1 = model_img(original_image_path)
         result_image1 = results1[0].plot()
+        result_image1 = Image.fromarray(result_image1)
         result_path1 = os.path.join(base_dir, 'results_model1', 'result_model1_' + unique_filename)
         result_image1.save(result_path1)
+
+        summary1 = summarize_results_model(results1, "Model 1") 
 
         # 模型 2 檢測
         results2 = model_wd(original_image_path)
         result_image2 = results2[0].plot()
+        result_image2 = Image.fromarray(result_image2)
         result_path2 = os.path.join(base_dir, 'results_model2', 'result_model2_' + unique_filename)
         result_image2.save(result_path2)
+
+        summary2 = summarize_results_model(results2, "Model 2") 
 
         #Send email
         # auto_send_imageResult(summary1, summary2, original_image_path)
@@ -186,6 +192,20 @@ def image_detect():
         logging.info("未檢測到任何物品")
 
     return jsonify(detected_items=detected_items)
+
+# 整理檢測結果
+def summarize_results_model(results, model_name):
+    detected_classes = {}
+    for result in results:
+        for box in result.boxes.data:
+            class_id = int(box[5])  # 獲取類別ID
+            confidence = float(box[4])  # 獲取信心度
+            class_name = results[0].names[class_id]  # 根據類別ID獲取類別名稱
+            detected_classes.setdefault(class_name, []).append(confidence)
+
+    summary = [f"{class_name}: {max(scores):.2f}" for class_name, scores in detected_classes.items()]
+    return f"{model_name} detected: " + ", ".join(summary) if summary else f"{model_name} detected: No objects detected."
+
 ########################################
 # 影片檢測功能
 ########################################
@@ -403,15 +423,40 @@ def generate_template_frames(video_path):
 # template(image)功能
 ########################################
 
-@app.route('/template_image_feed')
-def template_image_feed():
-    folder_path = "static/template/"
-    image_paths = image_paths = [file for file in os.listdir(folder_path) if file.endswith(('.jpg', '.jpeg'))]
+# @app.route('/template_image_feed')
+# def template_image_feed():
+#     folder_path = "static/template/"
+#     image_paths = image_paths = [file for file in os.listdir(folder_path) if file.endswith(('.jpg', '.jpeg'))]
 
-    if not image_paths:
-        return "沒有可用的圖像", 404
+#     if not image_paths:
+#         return "沒有可用的圖像", 404
+
+#     image_path = os.path.join(folder_path, random.choice(image_paths))
+#     print("=====")
+#     print(image_path)
+#     print("=====")
+
+#     image = cv2.imread(image_path)
+#     result = model_img(image)
+
+#     result_image = result[0].plot()
+#     json_data = result[0].tojson()
+
+#     _, buffer = cv2.imencode('.jpg', result_image)
+#     img_io = BytesIO(buffer)
+
+#     return send_file(img_io, mimetype='image/jpeg'),jsonify(json_data)
+
+@app.route('/template_image_feed')
+def template_image_feed(): 
+
+    global image_path
+
+    folder_path = "static/template/"
+    image_paths = [file for file in os.listdir(folder_path) if file.endswith(('.jpg', '.jpeg'))]
 
     image_path = os.path.join(folder_path, random.choice(image_paths))
+
     print("=====")
     print(image_path)
     print("=====")
@@ -425,6 +470,25 @@ def template_image_feed():
     img_io = BytesIO(buffer)
 
     return send_file(img_io, mimetype='image/jpeg')
+
+@app.route('/template_image_info')
+def template_image_info():
+    global image_path 
+
+    image = cv2.imread(image_path)
+    result = model_img(image)
+    box = result[0].boxes
+    detections = box.cls
+
+    detections_list = detections.cpu().numpy().tolist()
+
+    print("=====")
+    print(detections_list)
+    print(model_img.names)
+    print("=====")
+
+    return jsonify({"detections": detections_list})
+
 
 ########################################
 # 即時檢測功能
