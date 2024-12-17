@@ -82,8 +82,7 @@
     }
 
     #content {
-      display: none;
-      /* 初始隱藏內容 */
+      display: block;
     }
 
 
@@ -135,25 +134,21 @@
     }
   </style>
 
-<script>
-  function loadStream() {
-    document.getElementById('loading').style.display = 'block';
+  <script>
+    function loadStream() {
+      document.getElementById('loading').style.display = 'block';
 
-    const img = new Image();
-    img.src = "{{ url_for('imgpred') }}";
+      const img = new Image();
+      img.src = "{{ url_for('imgpred') }}";
 
-    img.onload = function () {
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('content').style.display = 'block';
-    };
+      img.onload = function () {
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('content').style.display = 'none';
+      };
+    }
 
-    img.onerror = function () {
-      alert('無法加載視頻流');
-    };
-  }
-
-  window.onload = loadStream; // 當頁面加載時開始加載流
-</script>
+    window.onload = loadStream;
+  </script>
 
 </head>
 
@@ -163,19 +158,17 @@
   <div class="loader" id="loading">Loading...</div>
 
   <div id="content">
-    <div>
-      <div id="header">
-        <span style="font-size: 30px; cursor: pointer" onclick="openMenu()"> &#9776; </span>
-      </div>
-      <div class="setMenu" id="menu">
-        <a href="javascript:void(0)" class="close" onclick="closeMenu()">&times;</a>
-        <a href="/">首頁</a>
-        <a href="/liveDetect">實時檢測</a>
-        <a href="/vidpred">影片檢測</a>
-        <a href="/objectDetection">圖像檢測</a>
-        <a href="/template_video">示例(video)</a>
-        <a href="/template_image">示例(image)</a>
-      </div>
+    <div id="header">
+      <span style="font-size: 30px; cursor: pointer" onclick="openMenu()"> &#9776; </span>
+    </div>
+    <div class="setMenu" id="menu">
+      <a href="javascript:void(0)" class="close" onclick="closeMenu()">&times;</a>
+      <a href="/">首頁</a>
+      <a href="/liveDetect">實時檢測</a>
+      <a href="/vidpred">影片檢測</a>
+      <a href="/objectDetection">圖像檢測</a>
+      <a href="/template_video">示例(video)</a>
+      <a href="/template_image">示例(image)</a>
     </div>
 
     <!--  -->
@@ -194,37 +187,33 @@
 
               <div class="card-body">
                 <div class="tab-content p-0">
-                  <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 720px;">
+                  <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 721px;">
+
                     {% if image_path %}
-                    <img src="{{ image_pred1 }}" alt="模型 1 結果" style="height: 700px;"
+                    <img src="{{ image_pred1 }}" alt="模型 1 結果" style="height: 721px;"
                       onload="hide_word(); hideStream();show_word()" />
                     {% endif %}
 
-                    <!-- Your main content -->
-                    <div id="main-content">
-                      <!-- Your website content here -->
-                    </div>
-
                     <div class="container mt-5" id="loading-message">
-                      <div class="row justify-content-between rounded">
-                        <div class="col-md-9">
-                          <form action="/imgpred" method="post" enctype="multipart/form-data"
-                            class="card shadow p-3 mb-5 bg-white rounded" id="loading-message">
-                            <div class="card-body">
-                              <h2 class="text-center">上傳圖片或視頻</h2>
-                              <p class="card-text text-center">請選擇您想要上傳的文件</p>
-                              <input type="file" name="image" class="form-control-file" id="inputFile" accept="image/*"
-                                required>
-                              <button class="btn btn-primary btn-block mt-3 w-100" type="submit"
-                                onclick="loadStream()">上傳</button>
-                            </div>
-                          </form>
+                      <!-- <div class="row justify-content-between rounded"> -->
+                      <!-- <div class="col-md-9"> -->
+                      <form action="/imgpred" method="post" enctype="multipart/form-data"
+                        class="card shadow p-3 mb-5 bg-white rounded" id="loading-message">
+                        <div class="card-body">
+                          <h2 class="text-center">上傳圖片或視頻</h2>
+                          <p class="card-text text-center">請選擇您想要上傳的文件</p>
+                          <input type="file" name="image" class="form-control-file" id="inputFile" accept="image/*"
+                            required>
+                          <button class="btn btn-primary btn-block mt-3 w-100" type="submit"
+                            onclick="loadStream()">上傳</button>
                         </div>
-                      </div>
+                      </form>
+                      <!-- </div> -->
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
           </section>
 
           <section class="col-lg-3 connectedSortable">
@@ -238,31 +227,26 @@
 
               <div class="card-body">
                 <div class="tab-content p-0">
-                  <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 748px;">
+                  <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 769px;">
 
                     <div class="list-container">
                       <h1>檢測結果</h1>
                       <ul id="detection-list" class="detection-list text-center">
-                        <li data-item="Slurry"
-                          class="{% if 'Slurry' in summary1 %}detected{% else %}not-detected{% endif %}">Slurry</li>
-                        <li data-item="dirt"
-                          class="{% if 'dirt' in summary1 %}detected{% else %}not-detected{% endif %}">dirt</li>
-                        <li data-item="nothing"
-                          class="{% if 'nothing' in summary1 %}detected{% else %}not-detected{% endif %}">nothing</li>
-                        <li data-item="wet" class="{% if 'wet' in summary2 %}detected{% else %}not-detected{% endif %}">
-                          wet detected</li>
-                        <li data-item="stone"
-                          class="{% if 'stone' in summary1 %}detected{% else %}not-detected{% endif %}">stone</li>
+                        <li data-item="Slurry" class="{% if 'Slurry' in summary1 %}detected{% else %}not-detected{% endif %}">Slurry</li>
+                        <li data-item="dirt" class="{% if 'dirt' in summary1 %}detected{% else %}not-detected{% endif %}">dirt</li>
+                        <li data-item="rock" class="{% if 'rock' in summary1 %}detected{% else %}not-detected{% endif %}">rock</li>
+                        <li data-item="nothing" class="{% if 'nothing' in summary1 %}detected{% else %}not-detected{% endif %}">nothing</li>
+                        <li data-item="wet" class="{% if 'wet' in summary2 %}detected{% else %}not-detected{% endif %}">wet detected</li>
+                        <li data-item="stone" class="{% if 'stone' in summary1 %}detected{% else %}not-detected{% endif %}">stone</li>
                       </ul>
 
                       <div id="yes-no-container" class="text-center">
-                        <div id="yes-no-box"
-                          class="{% if 'wet' in summary2 or 'Slurry' in summary1 %}not-detected{% else %}detected{% endif %}">
+                        <div id="yes-no-box"class="{% if 'wet' in summary2 or 'Slurry' in summary1 %}not-detected{% else %}detected{% endif %}">
                           {% if 'wet' in summary2 or 'Slurry' in summary1 %} No {% else %} Yes {% endif %}
                         </div>
                       </div>
 
-                      {% if "wet" in summary2 %}
+                      {% if "wet" in summary2 or "Slurry" in summary1 %}
                       <div class="alert alert-primary">Wet condition detected!</div>
                       {% endif %}
                     </div>
@@ -277,21 +261,14 @@
     </section>
   </div>
 
-  <!-- <footer class="bg-dark py-4 mt-auto">
-    <div class="text-center justify-content-between flex-column flex-sm-row">
-      <div class="small m-0 text-white"> &copy;Chun Wo Construction and Engineering Co. Ltd. </div>
-    </div>
-  </footer> -->
-  </div>
-
-  <script>
-    // resetButton.addEventListener('click', () => {
-    //   window.location.href = "{{ url_for('objectDetection') }}";
-    // });
+  <!-- <script>
+    resetButton.addEventListener('click', () => {
+      window.location.href = "{{ url_for('objectDetection') }}";
+    });
     document.getElementById('reset-button').addEventListener('click', function () {
       window.location.href = "{{ url_for('objectDetection') }}";
     });
-  </script>
+  </script> -->
 </body>
 
 </html>
