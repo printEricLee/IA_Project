@@ -15,7 +15,7 @@ app = Flask(__name__)
 
 # 初始化 YOLO 模型
 model_img = YOLO('model/best.pt')  # 圖像檢測模型
-model_test = YOLO('model/yolo11x.pt')  # 圖像檢測模型
+model_test = YOLO('model/Iteam_object.pt')  # 圖像檢測模型
 model_wd = YOLO('model/wet_dry.pt')        # 濕/乾分類模型
 link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
 
@@ -144,7 +144,7 @@ def imgpred():
         file.save(original_image_path)
 
         # 模型 1 檢測
-        results1 = model_img(original_image_path)
+        results1 = model_test(original_image_path)
         result_image1 = results1[0].plot()
         result_path1 = os.path.join(base_dir, 'results_model1', 'result_model1_' + unique_filename)
         Image.fromarray(result_image1[..., ::-1]).save(result_path1)
