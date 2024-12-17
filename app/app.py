@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, Response, jsonify, 
 from ultralytics import YOLO
 import cv2
 import os
+import datetime
 import uuid
 import threading
 import numpy as np
@@ -20,13 +21,19 @@ model_wd = YOLO('model/wet_dry.pt')        # 濕/乾分類模型
 link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
 
 # 生成唯一檔案名稱
+# def generate_unique_filename(filename):
+#     return str(uuid.uuid4()) + os.path.splitext(filename)[1]
+
+# use the date and time for the file name
 def generate_unique_filename(filename):
-    return str(uuid.uuid4()) + os.path.splitext(filename)[1]
+    current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+    return f"{current_time}{os.path.splitext(filename)[1]}"
 
 @app.route('/model')
 def serve_model_file():
     return send_from_directory('model')
 
+# temlate處理
 @app.route('/template_folder')
 def serve_template_folder():
     return send_from_directory('static', 'template')
@@ -36,6 +43,7 @@ def serve_template_folder():
 def serve_static_css_file():
     return send_from_directory('static', 'css', 'index.css')
 
+# 靜態檔案處理
 @app.route('/script.js')
 def serve_static_js_file():
     return send_from_directory('static', 'js', 'script.js')
@@ -60,14 +68,12 @@ def uploadVideo():
 def liveDetect():
     return render_template('LiveDetect.html')
 
-@app.route("/loadindpage")
-def loadindpage():
-    return render_template('LoadingPage.html')
-
+# template(video)
 @app.route('/template_video')
 def template_video():
     return render_template('template(video).html')
 
+# template(image)
 @app.route('/template_image')
 def template_image():
     return render_template('template(image).html')
@@ -133,7 +139,9 @@ def imgpred():
             return redirect(request.url)
 
         file = request.files['image']
+
         base_dir = os.path.join('static', 'images')
+        
         os.makedirs(os.path.join(base_dir, 'originals'), exist_ok=True)
         os.makedirs(os.path.join(base_dir, 'results_model1'), exist_ok=True)
         os.makedirs(os.path.join(base_dir, 'results_model2'), exist_ok=True)
@@ -144,18 +152,16 @@ def imgpred():
         file.save(original_image_path)
 
         # 模型 1 檢測
-        results1 = model_test(original_image_path)
+        results1 = model_img(original_image_path)
         result_image1 = results1[0].plot()
         result_path1 = os.path.join(base_dir, 'results_model1', 'result_model1_' + unique_filename)
-        Image.fromarray(result_image1[..., ::-1]).save(result_path1)
-        summary1 = summarize_results_model(results1, "Model 1")
+        result_image1.save(result_path1)
 
         # 模型 2 檢測
         results2 = model_wd(original_image_path)
         result_image2 = results2[0].plot()
         result_path2 = os.path.join(base_dir, 'results_model2', 'result_model2_' + unique_filename)
-        Image.fromarray(result_image2[..., ::-1]).save(result_path2)
-        summary2 = summarize_results_model(results2, "Model 2")
+        result_image2.save(result_path2)
 
         #Send email
         # auto_send_imageResult(summary1, summary2, original_image_path)
@@ -180,42 +186,11 @@ def image_detect():
         logging.info("未檢測到任何物品")
 
     return jsonify(detected_items=detected_items)
-
-# 整理檢測結果
-def summarize_results_model(results, model_name):
-    detected_classes = {}
-    for result in results:
-        for box in result.boxes.data:
-            class_id = int(box[5])
-            confidence = float(box[4])
-            class_name = get_class_name(class_id, model_name)
-            detected_classes.setdefault(class_name, []).append(confidence)
-
-    summary = [f"{class_name}: {max(scores):.2f}" for class_name, scores in detected_classes.items()]
-    return f"{model_name} detected: " + ", ".join(summary) if summary else f"{model_name} detected: No objects detected."
-
-# 取得類別名稱 (圖片)
-def get_class_name(class_id, model_name):
-    class_map = {
-        "Model 1": {        
-            0: "Slurry",
-            1: "dirt",
-            2: "nothing",
-            3: "other",
-            4: "stone"},
-        "Model 2": {        
-            0: "dry",
-            1: "wet"}
-    }
-    return class_map[model_name].get(class_id, "Unknown")
 ########################################
 # 影片檢測功能
 ########################################
 processing = False  # 處理狀態標誌
 detected_items = []  # 存儲檢測到的物體列表
-
-def generate_unique_filename(filename):
-    return filename  # 生成唯一文件名（當前實現不改變文件名）
 
 def save_frame(frame, frame_number, output_path):
     # 保存幀到指定路徑
