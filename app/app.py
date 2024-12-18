@@ -530,6 +530,41 @@ def generate_template_frames(video_path):
     cap.release()
     cv2.destroyAllWindows()
 
+@app.route('/template_video_info')
+def template_video_info():
+    global video_path
+
+    cap = cv2.VideoCapture(video_path)
+
+    ret, frame = cap.read()
+
+    cap.release()
+
+    print('Yo man')
+
+    results = model_truck(frame)
+
+    detections = []
+    if results:
+        box = results[0].boxes
+        annotated_frame = results[0].plot()
+        detections = box.cls.cpu().numpy().tolist()
+
+        ret, buffer = cv2.imencode('.jpg', annotated_frame)
+        frame_bytes = buffer.tobytes()
+
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
+    cap.release()
+    print("=====")
+    print(detections)
+    print("=====")
+    print(model_img.names)
+    print("=====")
+
+    return jsonify({"detections": detections})
+
 
 
 
