@@ -1,7 +1,7 @@
 services:
   fyp:
     platform: linux/amd64
-    image: nvidia/cuda:12.6.3-base-ubuntu20.04 # get the nvidia cuda image
+    image: nvidia/cuda:12.3.6-base-ubuntu20.04 # get the nvidia cuda image
     deploy:
       resources:
         reservations:
