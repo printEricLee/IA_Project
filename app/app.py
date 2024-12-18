@@ -445,12 +445,13 @@ def stop_processing():
 # template(video)功能
 ########################################
 
-processing = False  # Processing status flag
-detected_items = []  # List to store detected items
+processing = False  # 處理狀態標誌
+detected_items = []  # 存儲檢測到的物體列表
 
 @app.route('/template_feed')
 def template_feed():
     folder_path = "static/template/"
+
     video_paths = [file for file in os.listdir(folder_path) if file.endswith(".mp4")]
     
     video_path = os.path.join(folder_path, random.choice(video_paths))
@@ -462,42 +463,72 @@ def template_feed():
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 def generate_template_frames(video_path):
-    global detected_items
     cap = cv2.VideoCapture(video_path)
-
+    if not cap.isOpened():
+        print("无法打开视频文件")  # 调试信息
+        return
+    
     while cap.isOpened():
         ret, frame = cap.read()
-
         if not ret:
+            print("未能读取到帧")  # 调试信息
             break
 
-        results = model_img(frame, conf=0.6)  # Process the frame using the model
+        # 首先检测卡车
+        truck_results = model_truck(frame, conf=0.5)
+        truck_detected = False
+        truck_frame = None
 
-        # Assuming results is a list of Results objects
-        if isinstance(results, list) and len(results) > 0:
-            detected_items = []
-            result = results[0]  # Get the first result object
+        if truck_results and hasattr(truck_results[0], 'boxes'):
+            for box in truck_results[0].boxes.data:
+                class_id = int(box[5])
+                if truck_results[0].names[class_id] == 'box':  # 检测到卡车
+                    truck_detected = True
+                    # 获取卡车的边界框
+                    x1, y1, x2, y2 = int(box[0]), int(box[1]), int(box[2]), int(box[3])
+                    truck_frame = frame[y1:y2, x1:x2]  # 裁剪卡车区域
+                    break
 
-            if result.boxes is not None:
-                for box in result.boxes:
-                    class_id = int(box.cls)  # Class ID
-                    class_name = result.names[class_id]  # Access names from the result
-                    detected_items.append(class_name)
+        detected_items = []
+        # 在卡车区域内进行物体检测
+        if truck_detected and truck_frame is not None:
+            object_results = model_img(truck_frame)  # 在卡车内部进行物体检测
+            if object_results and hasattr(object_results[0], 'boxes'):
+                detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
 
-            annotated_frame = result.plot()  # Annotate the frame
-            compressed_frame = compress_frame(annotated_frame)
-            ret, buffer = cv2.imencode('.jpg', compressed_frame)
-            frame_bytes = buffer.tobytes()
+                # 在卡车区域内绘制物体的边界框
+                for box in object_results[0].boxes.data:
+                    x1_box, y1_box, x2_box, y2_box = int(box[0]), int(box[1]), int(box[2]), int(box[3])
+                    # 在主画面上绘制边界框
+                    cv2.rectangle(frame, (x1_box + x1, y1_box + y1), (x2_box + x1, y2_box + y1), (255, 0, 0), 2)
+                    # 更改字体大小和粗细
+                    cv2.putText(frame, object_results[0].names[int(box[5])], 
+                                (x1_box + x1, y1_box + y1 - 5), 
+                                cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 0, 0), 3)  # 增大字体和粗细
 
+            # 在主画面上标注卡车
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)  # 在卡车外框上画矩形
+            # 在卡车框内显示 "Truck"
+            cv2.putText(frame, 'Truck', (x1, y1 - 10), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 3)  # 增大字体和粗细
+
+        # 处理主画面
+        ret, buffer = cv2.imencode('.jpg', frame)
+        frame_bytes = buffer.tobytes()
+
+        # 发送主画面和卡车画面
+        if truck_frame is not None:
+            ret, truck_buffer = cv2.imencode('.jpg', truck_frame)
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n'
+                   b'--truck-frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + truck_buffer.tobytes() + b'\r\n')
+        else:
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
     cap.release()
     cv2.destroyAllWindows()
-
-@app.route('/detected_items')
-def get_detected_items():
-    return jsonify(detected_items)
 
 
 
