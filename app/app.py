@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, redirect, Response, jsonify, send_from_directory, url_for, flash, send_file
+from flask import Flask, render_template, request, redirect, Response, jsonify, send_from_directory, url_for, flash, send_file, stream_with_context
 from ultralytics import YOLO
 import cv2
 import os
+import time
 from datetime import datetime
 import uuid
 import threading
@@ -444,14 +445,9 @@ def stop_processing():
 ########################################
 # template(video)功能
 ########################################
-
-processing = False  # 處理狀態標誌
-detected_items = []  # 存儲檢測到的物體列表
-
 @app.route('/template_feed')
 def template_feed():
     folder_path = "static/template/"
-
     video_paths = [file for file in os.listdir(folder_path) if file.endswith(".mp4")]
     
     video_path = os.path.join(folder_path, random.choice(video_paths))
@@ -463,6 +459,9 @@ def template_feed():
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 def generate_template_frames(video_path):
+    global truck_results
+    global object_results
+
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         print("无法打开视频文件")  # 调试信息
@@ -474,7 +473,7 @@ def generate_template_frames(video_path):
             print("未能读取到帧")  # 调试信息
             break
 
-        # 首先检测卡车
+        # 首先檢測卡車
         truck_results = model_truck(frame, conf=0.5)
         truck_detected = False
         truck_frame = None
@@ -482,41 +481,41 @@ def generate_template_frames(video_path):
         if truck_results and hasattr(truck_results[0], 'boxes'):
             for box in truck_results[0].boxes.data:
                 class_id = int(box[5])
-                if truck_results[0].names[class_id] == 'box':  # 检测到卡车
+                if truck_results[0].names[class_id] == 'box':  # 檢測到卡車
                     truck_detected = True
-                    # 获取卡车的边界框
+                    # 獲取卡車的邊界框
                     x1, y1, x2, y2 = int(box[0]), int(box[1]), int(box[2]), int(box[3])
-                    truck_frame = frame[y1:y2, x1:x2]  # 裁剪卡车区域
+                    truck_frame = frame[y1:y2, x1:x2]  # 裁剪卡車區域
                     break
 
         detected_items = []
-        # 在卡车区域内进行物体检测
+        # 在卡車區域內進行物體檢測
         if truck_detected and truck_frame is not None:
-            object_results = model_img(truck_frame)  # 在卡车内部进行物体检测
+            object_results = model_img(truck_frame)  # 在卡車內部進行物體檢測
             if object_results and hasattr(object_results[0], 'boxes'):
                 detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
 
-                # 在卡车区域内绘制物体的边界框
+                # 在卡車區域內繪製物體的邊界框
                 for box in object_results[0].boxes.data:
                     x1_box, y1_box, x2_box, y2_box = int(box[0]), int(box[1]), int(box[2]), int(box[3])
-                    # 在主画面上绘制边界框
+                    # 在主畫面上繪製邊界框
                     cv2.rectangle(frame, (x1_box + x1, y1_box + y1), (x2_box + x1, y2_box + y1), (255, 0, 0), 2)
-                    # 更改字体大小和粗细
+                    # 更改字體大小和粗細
                     cv2.putText(frame, object_results[0].names[int(box[5])], 
                                 (x1_box + x1, y1_box + y1 - 5), 
-                                cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 0, 0), 3)  # 增大字体和粗细
+                                cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 0, 0), 3)  # 增大字體和粗細
 
-            # 在主画面上标注卡车
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)  # 在卡车外框上画矩形
-            # 在卡车框内显示 "Truck"
+            # 在主畫面上標註卡車
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)  # 在卡車外框上畫矩形
+            # 在卡車框內顯示 "Truck"
             cv2.putText(frame, 'Truck', (x1, y1 - 10), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 3)  # 增大字体和粗细
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 3)  # 增大字體和粗細
 
-        # 处理主画面
+        # 處理主畫面
         ret, buffer = cv2.imencode('.jpg', frame)
         frame_bytes = buffer.tobytes()
 
-        # 发送主画面和卡车画面
+        # 發送主畫面和卡車畫面
         if truck_frame is not None:
             ret, truck_buffer = cv2.imencode('.jpg', truck_frame)
             yield (b'--frame\r\n'
@@ -532,38 +531,26 @@ def generate_template_frames(video_path):
 
 @app.route('/template_video_info')
 def template_video_info():
-    global video_path
 
-    cap = cv2.VideoCapture(video_path)
+    global truck_results
+    global object_results
 
-    ret, frame = cap.read()
+    results1 = truck_results
+    results2 = object_results
 
-    cap.release()
+    detections1 = []
+    detections2 = []
+    
+    detections1 = results1[0].boxes.cls.cpu().numpy().tolist()
+    detections2 = results2[0].boxes.cls.cpu().numpy().tolist()
 
-    print('Yo man')
+    return jsonify({
+        "detections1": detections1,
+        "detections2": detections2
+    })
+     
 
-    results = model_truck(frame)
 
-    detections = []
-    if results:
-        box = results[0].boxes
-        annotated_frame = results[0].plot()
-        detections = box.cls.cpu().numpy().tolist()
-
-        ret, buffer = cv2.imencode('.jpg', annotated_frame)
-        frame_bytes = buffer.tobytes()
-
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-
-    cap.release()
-    print("=====")
-    print(detections)
-    print("=====")
-    print(model_img.names)
-    print("=====")
-
-    return jsonify({"detections": detections})
 
 
 
@@ -592,7 +579,6 @@ def template_video_info():
 ########################################
 # template(image)功能
 ########################################
-
 @app.route('/template_image_feed')
 def template_image_feed(): 
 
@@ -626,18 +612,14 @@ def template_image_feed():
 def template_image_info():
     global image_path 
 
-    # Read the image in color and grayscale
     image = cv2.imread(image_path)
     im_gray = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
-    # Convert grayscale image to PIL format
     im_gray_mat = Image.fromarray(im_gray)
 
-    # Run detection models
     result1 = model_img(image)
     result2 = model_wd(im_gray_mat)
 
-    # Extract detection boxes
     box1 = result1[0].boxes
     box2 = result2[0].boxes
 
