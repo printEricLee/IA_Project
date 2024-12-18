@@ -545,10 +545,15 @@ def template_image_feed():
 
     global image_path
 
-    folder_path = "static/template/"
-    image_paths = [file for file in os.listdir(folder_path) if file.endswith(('.jpg', '.jpeg'))]
+    folder_path_yes = "static/template/yes"
+    folder_path_no = "static/template/no"
 
-    image_path = os.path.join(folder_path, random.choice(image_paths))
+    image_paths_yes = [file for file in os.listdir(folder_path_yes) if file.endswith(('.jpg', '.jpeg'))]
+    image_paths_no = [file for file in os.listdir(folder_path_no) if file.endswith(('.jpg', '.jpeg'))]
+
+    image_paths = image_paths_yes + image_paths_no
+    
+    image_path = os.path.join(random.choice([folder_path_yes, folder_path_no]), random.choice(image_paths))
 
     print("=====")
     print(image_path)
@@ -568,19 +573,33 @@ def template_image_feed():
 def template_image_info():
     global image_path 
 
+    # Read the image in color and grayscale
     image = cv2.imread(image_path)
-    result = model_img(image)
-    box = result[0].boxes
-    detections = box.cls
+    im_gray = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
-    detections_list = detections.cpu().numpy().tolist()
+    # Convert grayscale image to PIL format
+    im_gray_mat = Image.fromarray(im_gray) 
+
+    # Run detection models
+    result1 = model_img(image)
+    result2 = model_wd(im_gray_mat)
+
+    # Extract detection boxes
+    box1 = result1[0].boxes
+    box2 = result2[0].boxes
+
+    detections1 = box1.cls.cpu().numpy().tolist()
+    detections2 = box2.cls.cpu().numpy().tolist()
 
     print("=====")
-    print(detections_list)
+    print(detections1)
+    print(detections2)
+    print("=====")
     print(model_img.names)
+    print(model_wd.names)
     print("=====")
 
-    return jsonify({"detections": detections_list})
+    return jsonify({"detections1": detections1, "detections2": detections2})
 
 
 
