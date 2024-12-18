@@ -78,9 +78,35 @@ def template_video():
 def template_image():
     return render_template('template(image).html')
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ########################################
 # Send Email funtion
 ########################################
+
 # 配置 Flask-Mail 使用 Gmail SMTP 伺服器
 # reference : https://github.com/twtrubiks/Flask-Mail-example?tab=readme-ov-file
 # app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -127,6 +153,28 @@ def template_image():
 
 #     send_email(recipient, "圖片檢測結果", body, image_path)
 #     flash('功能1結果郵件已自動發送！', 'success')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ########################################
 # 圖片檢測功能
@@ -205,6 +253,26 @@ def summarize_results_model(results, model_name):
 
     summary = [f"{class_name}: {max(scores):.2f}" for class_name, scores in detected_classes.items()]
     return f"{model_name} detected: " + ", ".join(summary) if summary else f"{model_name} detected: No objects detected."
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ########################################
 # 影片檢測功能
@@ -374,6 +442,31 @@ def get_detection_results():
     print("當前檢測到的項目:", detected_items)  # 輸出當前檢測到的項目
     return jsonify(detected_items=list(set(detected_items)))  # 返回唯一的檢測項目
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ########################################
 # template(video)功能
 ########################################
@@ -419,33 +512,33 @@ def generate_template_frames(video_path):
     cap.release()
     cv2.destroyAllWindows()
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ########################################
 # template(image)功能
 ########################################
-
-# @app.route('/template_image_feed')
-# def template_image_feed():
-#     folder_path = "static/template/"
-#     image_paths = image_paths = [file for file in os.listdir(folder_path) if file.endswith(('.jpg', '.jpeg'))]
-
-#     if not image_paths:
-#         return "沒有可用的圖像", 404
-
-#     image_path = os.path.join(folder_path, random.choice(image_paths))
-#     print("=====")
-#     print(image_path)
-#     print("=====")
-
-#     image = cv2.imread(image_path)
-#     result = model_img(image)
-
-#     result_image = result[0].plot()
-#     json_data = result[0].tojson()
-
-#     _, buffer = cv2.imencode('.jpg', result_image)
-#     img_io = BytesIO(buffer)
-
-#     return send_file(img_io, mimetype='image/jpeg'),jsonify(json_data)
 
 @app.route('/template_image_feed')
 def template_image_feed(): 
@@ -488,6 +581,22 @@ def template_image_info():
     print("=====")
 
     return jsonify({"detections": detections_list})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ########################################
