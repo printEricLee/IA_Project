@@ -146,35 +146,50 @@
                 document.getElementById('content').style.display = 'block';
             };
 
-            img.onerror = function () {
-                alert('error bro');
-            };
+            // 獲取檢測結果
+            fetch('/template_video_info')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.detections) {
+                        console.log('Detections:', data.detections); // 在控制台中顯示檢測結果
+                        updateDetectionList(data.detections); // 更新檢測列表
+                    }
+                })
         }
 
-        window.onload = loadStream; // 當頁面加載時開始加載流
+        function updateDetectionList(detections) {
+            const detectionList = document.getElementById('image-detection-list');
+            const items = detectionList.getElementsByTagName('li');
 
-        function updateTruckImage(truckImage) {
-            var truckFrame = document.getElementById("truck-frame");
-            var truckImageElement = document.getElementById("truck-image");
+            // Reset all items to not-detected status
+            for (let item of items) {
+                item.className = 'not-detected';
+            }
 
-            if (truckImage) {
-                truckImageElement.src = 'data:image/jpeg;base64,' + truckImage; // 更新图像源
-                truckFrame.style.display = "block"; // 显示卡车画面
-            } else {
-                truckFrame.style.display = "none"; // 隐藏卡车画面
+            let detectedItems = [];
+
+            // Update detections1
+            detections1.forEach(detection => {
+                const item = detectionList.querySelector(`li[data-item="${detection}"]`);
+                if (item) {
+                    item.className = 'detected';
+                    detectedItems.push(detection);
+                }
+            });
+
+            const yesNoBox = document.getElementById('yes-no-box');
+            if (detectedItems.includes(1)) {
+                yesNoBox.textContent = 'Fine thank you';
+                yesNoBox.style.backgroundColor = 'red';
             }
         }
 
-        function processFrame(frameData) {
-            const parts = frameData.split(',');
-            document.getElementById('main-content').src = 'data:image/jpeg;base64,' + parts[0]; // 主画面
-
-            if (parts.length > 1) {
-                updateTruckImage(parts[1]); // 更新卡车画面
-            } else {
-                updateTruckImage(null); // 隐藏卡车画面
-            }
-        }
+        window.onload = loadStream;
     </script>
 </head>
 
