@@ -144,53 +144,70 @@
             img.onload = function () {
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('content').style.display = 'block';
+
+                function fetchDetectionResults() {
+                    fetch('/template_video_info')
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.detections1 && data.detections2) {
+                                console.log('Detections1:', data.detections1, 'Detections2:', data.detections2);
+                                updateDetectionList(data.detections1, data.detections2);
+                            }
+                        })
+                }
+
+                setInterval(fetchDetectionResults, 500); // 1 sec = 1000
             };
 
-            // 獲取檢測結果
-            fetch('/template_video_info')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.detections) {
-                        console.log('Detections:', data.detections); // 在控制台中顯示檢測結果
-                        updateDetectionList(data.detections); // 更新檢測列表
-                    }
-                })
-        }
+            function updateDetectionList(detections1, detections2) {
+                const detectionList = document.getElementById('image-detection-list');
+                const items = detectionList.getElementsByTagName('li');
 
-        function updateDetectionList(detections) {
-            const detectionList = document.getElementById('image-detection-list');
-            const items = detectionList.getElementsByTagName('li');
-
-            // Reset all items to not-detected status
-            for (let item of items) {
-                item.className = 'not-detected';
-            }
-
-            let detectedItems = [];
-
-            // Update detections1
-            detections1.forEach(detection => {
-                const item = detectionList.querySelector(`li[data-item="${detection}"]`);
-                if (item) {
-                    item.className = 'detected';
-                    detectedItems.push(detection);
+                // 重置所有項目為未檢測狀態
+                for (let item of items) {
+                    item.className = 'not-detected';
                 }
-            });
 
-            const yesNoBox = document.getElementById('yes-no-box');
-            if (detectedItems.includes(1)) {
-                yesNoBox.textContent = 'Fine thank you';
-                yesNoBox.style.backgroundColor = 'red';
+                let detectedItems1 = [];
+                let detectedItems2 = [];
+
+                // 更新檢測列表
+                detections1.forEach(detection => {
+                    const item = detectionList.querySelector(`li[data-item="${detection}"][data-detection="1"]`);
+                    if (item) {
+                        item.className = 'detected';
+                        detectedItems1.push(detection);
+                    }
+                });
+
+                detections2.forEach(detection => {
+                    const item = detectionList.querySelector(`li[data-item="${detection}"][data-detection="2"]`);
+                    if (item) {
+                        item.className = 'detected';
+                        detectedItems2.push(detection);
+                    }
+                });
+
+                const yesNoBox = document.getElementById('yes-no-box');
+                if (!detectedItems1.includes(1)) {
+                    yesNoBox.textContent = 'No car bro are you no money';
+                    yesNoBox.style.backgroundColor = 'red';
+                } else {
+                    yesNoBox.textContent = 'Fine';
+                    yesNoBox.style.backgroundColor = 'green';
+                }
             }
         }
 
         window.onload = loadStream;
     </script>
+
+
 </head>
 
 <body>
@@ -236,17 +253,6 @@
                                             <img src="/template_feed" alt="template" style="width: 100%;" />
                                         </div>
 
-                                        <div id="truck-frame">
-                                            <img id="truck-image" src="" alt="Truck frame" style="width: 100%;" />
-                                        </div>
-
-                                        <div class="container mt-5" id="loading-message">
-                                            <div class="row justify-content-between rounded">
-                                                <div class="col-md-9">
-                                                </div>
-                                            </div>
-                                        </div>
-
                                     </div>
                                 </div>
                             </div>
@@ -267,18 +273,18 @@
                                         style="position: relative; height: 748px;">
 
                                         <ul id="image-detection-list" class="detection-list text-center">
-                                            <li data-item="rock" class="not-detected">rock</li>
-                                            <li data-item="slurry-soil" class="not-detected">slurry-soil</li>
+                                            <li data-item="1" data-detection="1" class="not-detected">rock</li>
+                                            <li data-item="2" data-detection="1" class="not-detected">slurry</li>
+                                            <li data-item="3" data-detection="1" class="not-detected">soil</li>
                                             <li data-item="Non-inert" class="not-detected">Non-inert</li>
                                             <li data-item="inert" class="not-detected">inert</li>
-                                            <li data-item="slurry; wet" class="not-detected">wet</li>
-                                            <li data-item="truck" class="not-detected">truck</li>
-                                            <li data-item="collection point" class="not-detected">collection point</li>
+                                            <li data-item="1" class="not-detected">wet</li>
+                                            <li>I on the next level</li>
+                                            <li data-item="1" data-detection="2" class="not-detected">truck</li>
+                                            <li data-item="2" data-detection="2" class="not-detected">collection point
+                                            </li>
+                                            <li id="yes-no-box">#</li>
                                         </ul>
-
-                                        <div id="yes-no-container" class="text-center">
-                                            <div id="yes-no-box" class="not-detected">No</div>
-                                        </div>
 
                                     </div>
                                 </div>
