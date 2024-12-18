@@ -132,21 +132,6 @@
         .list-container {
             flex: 1;
         }
-        .yes {
-            background-color: green;
-            color: white;
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 5px;
-        }
-
-        .no {
-            background-color: red;
-            color: white;
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 5px;
-        }
     </style>
 
     <script>
@@ -162,62 +147,35 @@
             };
 
             img.onerror = function () {
-                alert('Error loading video stream.');
+                alert('error bro');
             };
         }
 
-        function fetchDetectedItems() {
-            fetch('/detected_items')
-                .then(response => response.json())
-                .then(data => {
-                    const list = document.getElementById('image-detection-list');
-                    const items = ['rock', 'slurry-soil', 'Non-inert', 'inert', 'slurry; wet', 'truck', 'collection point', 'Flat Shovel', 'box'];
+        window.onload = loadStream; // 當頁面加載時開始加載流
 
-                    list.innerHTML = ''; // Clear existing items
+        function updateTruckImage(truckImage) {
+            var truckFrame = document.getElementById("truck-frame");
+            var truckImageElement = document.getElementById("truck-image");
 
-                    let detectedWet = false;
-                    let detectedSlurry = false;
-
-                    items.forEach(item => {
-                        const li = document.createElement('li');
-                        li.textContent = item;
-                        li.setAttribute('data-item', item);
-
-                        // Check if the item is detected
-                        if (data.includes(item)) {
-                            li.className = 'detected'; // Change class for detected items
-                            if (item === 'slurry; wet') {
-                                detectedWet = true; // Mark as detected
-                            }
-                            if (item === 'slurry-soil') {
-                                detectedSlurry = true; // Mark as detected
-                            }
-                        } else {
-                            li.className = 'not-detected'; // Class for not detected items
-                        }
-
-                        list.appendChild(li); // Add the list item to the list
-                    });
-
-                    // Update the yes-no box based on detection
-                    const yesNoBox = document.getElementById('yes-no-box');
-                    if (detectedWet && detectedSlurry) {
-                        yesNoBox.textContent = 'No'; // Both detected
-                        yesNoBox.className = 'detected'; // Change class for visual feedback
-                    } else {
-                        yesNoBox.textContent = 'Yes'; // At least one not detected
-                        yesNoBox.className = 'not-detected'; // Change class for visual feedback
-                    }
-                })
-                .catch(error => console.error('Error fetching detected items:', error));
+            if (truckImage) {
+                truckImageElement.src = 'data:image/jpeg;base64,' + truckImage; // 更新图像源
+                truckFrame.style.display = "block"; // 显示卡车画面
+            } else {
+                truckFrame.style.display = "none"; // 隐藏卡车画面
+            }
         }
 
-        window.onload = function() {
-            loadStream(); // Start loading video stream
-            setInterval(fetchDetectedItems, 1000); // Fetch detected items every second
-        };
-    </script>
+        function processFrame(frameData) {
+            const parts = frameData.split(',');
+            document.getElementById('main-content').src = 'data:image/jpeg;base64,' + parts[0]; // 主画面
 
+            if (parts.length > 1) {
+                updateTruckImage(parts[1]); // 更新卡车画面
+            } else {
+                updateTruckImage(null); // 隐藏卡车画面
+            }
+        }
+    </script>
 </head>
 
 <body>
@@ -263,6 +221,10 @@
                                             <img src="/template_feed" alt="template" style="width: 100%;" />
                                         </div>
 
+                                        <div id="truck-frame">
+                                            <img id="truck-image" src="" alt="Truck frame" style="width: 100%;" />
+                                        </div>
+
                                         <div class="container mt-5" id="loading-message">
                                             <div class="row justify-content-between rounded">
                                                 <div class="col-md-9">
@@ -297,12 +259,10 @@
                                             <li data-item="slurry; wet" class="not-detected">wet</li>
                                             <li data-item="truck" class="not-detected">truck</li>
                                             <li data-item="collection point" class="not-detected">collection point</li>
-                                            <li data-item="Flat Shovel" class="not-detected">Flat Shovel</li>
-                                            <li data-item="box" class="not-detected">box</li>
                                         </ul>
 
                                         <div id="yes-no-container" class="text-center">
-                                            <div id="yes-no-box" class="not-detected">Yes</div>
+                                            <div id="yes-no-box" class="not-detected">No</div>
                                         </div>
 
                                     </div>
