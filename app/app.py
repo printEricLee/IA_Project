@@ -16,7 +16,7 @@ app = Flask(__name__)
 
 # 初始化 YOLO 模型
 model_img = YOLO('model/Iteam_object.pt')  # 圖像檢測模型
-model_truck = YOLO('model/Iteam_object.pt')  # 圖像檢測模型
+model_truck = YOLO('model/best.pt')  # 圖像檢測模型
 model_wd = YOLO('model/wet_dry.pt')        # 濕/乾分類模型
 link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
 
