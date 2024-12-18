@@ -184,12 +184,12 @@
 
             // 更新 yes-no-box 根據檢測結果
             const yesNoBox = document.getElementById('yes-no-box');
-            if (detectedItems.includes(3)) { // 假設 3 代表某個特定的檢測項目
+            if (detectedItems.includes(2)) { // 假設 3 代表某個特定的檢測項目
                 yesNoBox.textContent = 'No';
-                yesNoBox.style.backgroundColor = 'green';
+                yesNoBox.style.backgroundColor = 'red';
             } else {
                 yesNoBox.textContent = 'Yes';
-                yesNoBox.style.backgroundColor = 'red';
+                yesNoBox.style.backgroundColor = 'green';
             }
         }
 
