@@ -144,39 +144,49 @@
     }
 
     // 獲取檢測結果並更新顯示
-    async function fetchDetectionResults() {
-      const response = await fetch('/get_detection_results');
-      if (response.ok) {
-        const data = await response.json();
-        console.log("檢測到的物體:", data.detected_items);  // 調試打印
-        const detectedItems = data.detected_items;  // 確保這是一個數組
-        updateItemDisplay(detectedItems);
-      } else {
-        console.error('無法獲取檢測結果');
-      }
+    function fetchDetectionResults() {
+        // 從伺服器獲取檢測結果
+        fetch('/get_detection_results')
+            .then(response => response.json()) // 將響應轉換為JSON格式
+            .then(data => {
+                const list = document.getElementById('image-detection-list'); // 獲取顯示檢測結果的列表
+                const items = ['rock', 'slurry-soil', 'Non-inert', 'inert', 'slurry; wet', 'truck', 'collection point', 'Flat Shovel', 'box']; // 預定義的項目列表
+
+                list.innerHTML = ''; // 清空現有項目
+
+                // 對每個項目進行迭代
+                items.forEach(item => {
+                    const li = document.createElement('li'); // 創建新的列表項
+                    li.textContent = item; // 設置列表項的文本內容
+                    li.setAttribute('data-item', item); // 設置自定義數據屬性
+
+                    // 檢查該項目是否被檢測到
+                    if (data.detected_items.includes(item)) {
+                      li.className = 'detected'; // Change class for detected items
+                            if (item === 'slurry; wet') {
+                                detectedWet = true; // Mark as detected
+                            }
+                            if (item === 'slurry-soil') {
+                                detectedSlurry = true; // Mark as detected
+                            }
+                        } else {
+                            li.className = 'not-detected'; // Class for not detected items
+                        }
+
+                    list.appendChild(li); // 將列表項添加到列表中
+                });
+            })
+            .catch(error => console.error('獲取檢測結果時發生錯誤:', error)); // 捕獲並記錄錯誤
     }
 
-    // 更新物品顯示狀態
-    function updateItemDisplay(detectedItems) {
-      const items = {
-        'Dump-truck': document.getElementById('Dump-truck'),
-        'collection point': document.getElementById('collection point'),
-        'Other-truck': document.getElementById('Other-truck'),
-      };
+    window.onload = function() {
+        fetchDetectionResults(); // 在頁面加載時獲取檢測結果
+        setInterval(fetchDetectionResults, 1000); // 每秒鐘獲取一次檢測結果
+    };
 
-      for (const [item, element] of Object.entries(items)) {
-        if (detectedItems.includes(item)) {
-          element.classList.remove('not-detected');
-          element.classList.add('detected');
-        } else {
-          element.classList.remove('detected');
-          element.classList.add('not-detected');
-        }
-      }
-    }
-
-    // 在頁面加載時獲取檢測結果
-    window.onload = fetchDetectionResults;
+    window.onbeforeunload = function() {
+        fetch('/stop_processing', { method: 'POST' });
+    };
   </script>
 
 </head>
@@ -263,17 +273,19 @@
                 <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 748px;">
 
                   <ul id="image-detection-list" class="detection-list text-center">
-                    <li data-item="rock" class="not-detected">rock</li>
-                    <li data-item="slurry-soil" class="not-detected">slurry-soil</li>
-                    <li data-item="Non-inert" class="not-detected">Non-inert</li>
-                    <li data-item="inert" class="not-detected">inert</li>
-                    <li data-item="slurry; wet" class="not-detected">wet</li>
-                    <li data-item="truck" class="not-detected">truck</li>
-                    <li data-item="truck" class="not-detected">collection point</li>
+                      <li data-item="rock" class="not-detected">rock</li>
+                      <li data-item="slurry-soil" class="not-detected">slurry-soil</li>
+                      <li data-item="Non-inert" class="not-detected">Non-inert</li>
+                      <li data-item="inert" class="not-detected">inert</li>
+                      <li data-item="slurry; wet" class="not-detected">wet</li>
+                      <li data-item="truck" class="not-detected">truck</li>
+                      <li data-item="collection point" class="not-detected">collection point</li>
+                      <li data-item="Flat Shovel" class="not-detected">Flat Shovel</li>
+                      <li data-item="box" class="not-detected">box</li>
                   </ul>
 
                   <div id="yes-no-container" class="text-center">
-                    <div id="yes-no-box" class="not-detected">No</div>
+                      <div id="yes-no-box" class="not-detected">Yes</div>
                   </div>
 
                 </div>
