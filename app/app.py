@@ -281,6 +281,8 @@ def summarize_results_model(results, model_name):
 processing = False  # 處理狀態標誌
 detected_items = []  # 存儲檢測到的物體列表
 detected_items_lock = threading.Lock()  # 鎖以確保線程安全訪問
+truck_results = None  # 初始化全局變量
+object_results = None  # 初始化全局變量
 
 def save_frame(frame, frame_number, output_path):
     # 保存幀到指定的輸出路徑
@@ -377,31 +379,95 @@ def vidpred():
     return render_template('UploadVideo.html')  # 返回上傳頁面
 
 def generate_video_frames(video_path):
-    # 生成影片幀以供串流使用
-    cap = cv2.VideoCapture(video_path)  # 打開影片文件
-    while cap.isOpened() and processing:  # 當影片仍在打開且正在處理
-        ret, frame = cap.read()  # 讀取一幀
+    global truck_results
+    global object_results
+
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        print("无法打开视频文件")  # 调试信息
+        return
+    
+    while cap.isOpened():
+        ret, frame = cap.read()
         if not ret:
-            break  # 如果讀取失敗，則退出
+            print("未能读取到帧")  # 调试信息
+            break
 
-        results = model_img(frame)  # 在幀上運行物體檢測模型
-        if results:
-            annotated_frame = results[0].plot()  # 繪製標註幀
-            compressed_frame = compress_frame(annotated_frame)  # 壓縮幀
-            
-            ret, buffer = cv2.imencode('.jpg', compressed_frame)  # 將幀編碼為JPEG格式
-            frame_bytes = buffer.tobytes()  # 轉換為字節流
+        # 首先檢測卡車
+        truck_results = model_truck(frame, conf=0.5)
+        truck_detected = False
+        truck_frame = None
 
+        if truck_results and hasattr(truck_results[0], 'boxes'):
+            for box in truck_results[0].boxes.data:
+                class_id = int(box[5])
+                if truck_results[0].names[class_id] == 'box':  # 檢測到卡車
+                    truck_detected = True
+                    # 獲取卡車的邊界框
+                    x1, y1, x2, y2 = int(box[0]), int(box[1]), int(box[2]), int(box[3])
+                    truck_frame = frame[y1:y2, x1:x2]  # 裁剪卡車區域
+                    break
+
+        detected_items = []
+        # 在卡車區域內進行物體檢測
+        if truck_detected and truck_frame is not None:
+            object_results = model_img(truck_frame)  # 在卡車內部進行物體檢測
+            if object_results and hasattr(object_results[0], 'boxes'):
+                detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
+
+                # 在卡車區域內繪製物體的邊界框
+                for box in object_results[0].boxes.data:
+                    x1_box, y1_box, x2_box, y2_box = int(box[0]), int(box[1]), int(box[2]), int(box[3])
+                    # 在主畫面上繪製邊界框
+                    cv2.rectangle(frame, (x1_box + x1, y1_box + y1), (x2_box + x1, y2_box + y1), (255, 0, 0), 2)
+                    # 更改字體大小和粗細
+                    cv2.putText(frame, object_results[0].names[int(box[5])], 
+                                (x1_box + x1, y1_box + y1 - 5), 
+                                cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 0, 0), 3)  # 增大字體和粗細
+
+            # 在主畫面上標註卡車
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)  # 在卡車外框上畫矩形
+            # 在卡車框內顯示 "Truck"
+            cv2.putText(frame, 'Truck', (x1, y1 - 10), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 3)  # 增大字體和粗細
+
+        # 處理主畫面
+        ret, buffer = cv2.imencode('.jpg', frame)
+        frame_bytes = buffer.tobytes()
+
+        # 發送主畫面和卡車畫面
+        if truck_frame is not None:
+            ret, truck_buffer = cv2.imencode('.jpg', truck_frame)
             yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')  # 發送幀
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n'
+                   b'--truck-frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + truck_buffer.tobytes() + b'\r\n')
+        else:
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
+    cap.release()
+    cv2.destroyAllWindows()
+
 
 @app.route('/get_detection_results', methods=['GET'])
 def get_detection_results():
-    # 以JSON格式返回檢測到的項目
-    global detected_items
-    with detected_items_lock:
-        logging.info("當前檢測到的項目: %s", detected_items)  # 記錄當前檢測到的項目
-        return jsonify(detected_items=list(set(detected_items)))  # 返回唯一的檢測項目
+    global truck_results
+    global object_results
+
+    if truck_results is None or object_results is None:
+        return jsonify({"error": "No detection results available."}), 400
+
+    results1 = truck_results
+    results2 = object_results
+
+    detections1 = results1[0].boxes.cls.cpu().numpy().tolist() if results1 else []
+    detections2 = results2[0].boxes.cls.cpu().numpy().tolist() if results2 else []
+
+    return jsonify({
+        "detections1": detections1,
+        "detections2": detections2
+    })
 
 @app.route('/video_feed/<filename>')
 def video_feed(filename):

@@ -143,40 +143,61 @@
       document.getElementById("loading").style.display = "none";
     }
 
-    // 獲取檢測結果並更新顯示
     function fetchDetectionResults() {
-        // 從伺服器獲取檢測結果
-        fetch('/get_detection_results')
-            .then(response => response.json()) // 將響應轉換為JSON格式
-            .then(data => {
-                const list = document.getElementById('image-detection-list'); // 獲取顯示檢測結果的列表
-                const items = ['rock', 'slurry-soil', 'Non-inert', 'inert', 'slurry; wet', 'truck', 'collection point', 'Flat Shovel', 'box']; // 預定義的項目列表
-
-                list.innerHTML = ''; // 清空現有項目
-
-                // 對每個項目進行迭代
-                items.forEach(item => {
-                    const li = document.createElement('li'); // 創建新的列表項
-                    li.textContent = item; // 設置列表項的文本內容
-                    li.setAttribute('data-item', item); // 設置自定義數據屬性
-
-                    // 檢查該項目是否被檢測到
-                    if (data.detected_items.includes(item)) {
-                      li.className = 'detected'; // Change class for detected items
-                            if (item === 'slurry; wet') {
-                                detectedWet = true; // Mark as detected
+                    fetch('/get_detection_results')
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
                             }
-                            if (item === 'slurry-soil') {
-                                detectedSlurry = true; // Mark as detected
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.detections1 && data.detections2) {
+                                console.log('Detections1:', data.detections1, 'Detections2:', data.detections2);
+                                updateDetectionList(data.detections1, data.detections2);
                             }
-                        } else {
-                            li.className = 'not-detected'; // Class for not detected items
-                        }
+                        })
+                }
 
-                    list.appendChild(li); // 將列表項添加到列表中
+    setInterval(fetchDetectionResults, 500); // 1 sec = 1000
+
+    function updateDetectionList(detections1, detections2) {
+                const detectionList = document.getElementById('image-detection-list');
+                const items = detectionList.getElementsByTagName('li');
+
+                // 重置所有項目為未檢測狀態
+                for (let item of items) {
+                    item.className = 'not-detected';
+                }
+
+                let detectedItems1 = [];
+                let detectedItems2 = [];
+
+                // 更新檢測列表
+                detections1.forEach(detection => {
+                    const item = detectionList.querySelector(`li[data-item="${detection}"][data-detection="1"]`);
+                    if (item) {
+                        item.className = 'detected';
+                        detectedItems1.push(detection);
+                    }
                 });
-            })
-            .catch(error => console.error('獲取檢測結果時發生錯誤:', error)); // 捕獲並記錄錯誤
+
+                detections2.forEach(detection => {
+                    const item = detectionList.querySelector(`li[data-item="${detection}"][data-detection="2"]`);
+                    if (item) {
+                        item.className = 'detected';
+                        detectedItems2.push(detection);
+                    }
+                });
+
+                const yesNoBox = document.getElementById('yes-no-box');
+                if (!detectedItems1.includes(1)) {
+                    yesNoBox.textContent = 'No car bro are you no money';
+                    yesNoBox.style.backgroundColor = 'red';
+                } else {
+                    yesNoBox.textContent = 'Fine';
+                    yesNoBox.style.backgroundColor = 'green';
+                }
     }
 
     window.onload = function() {
