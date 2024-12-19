@@ -21,7 +21,7 @@ CORS(app)
 model_img = YOLO('model/Iteam_object.pt')  # 圖像檢測模型
 model_truck = YOLO('model/best.pt')  # 圖像檢測模型
 model_wd = YOLO('model/wet_dry.pt')        # 濕/乾分類模型
-link = 'static/template/Case_4.mp4' #'rtsp://admin:Abcd1@34@182.239.73.242:8554'
+link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
 
 # 生成唯一檔案名稱
 # def generate_unique_filename(filename):
