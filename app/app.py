@@ -12,8 +12,10 @@ import logging
 from flask_mail import Mail, Message
 import random
 from io import BytesIO
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 # 初始化 YOLO 模型
 model_img = YOLO('model/Iteam_object.pt')  # 圖像檢測模型
@@ -180,9 +182,15 @@ def template_image():
 ########################################
 # 圖片檢測功能
 ########################################
+results1 = None
+results2 = None
 @app.route('/imgpred', methods=['GET', 'POST'])
 def imgpred():
     if request.method == 'POST':
+
+        global results1
+        global results2
+
         # 確認是否有上傳圖片
         if 'image' not in request.files or request.files['image'].filename == '':
             return redirect(request.url)
@@ -226,34 +234,35 @@ def imgpred():
 
     return render_template('index.html', image_path=None)
 
-@app.route('/image-detect')
-def image_detect():
-    # 確保 original_image_path 是可用的
-    original_image_path = request.args.get('image_path')  # 假設從請求中獲取圖片路徑
-    detected_items = []
+@app.route('/get_image_results', methods=['GET'])
+def get_image_results():
+    global results1
+    global results2
 
-    # 確保 model_img 函數的調用正確
-    result = model_img(original_image_path, conf=0.8)
-    
-    if result and hasattr(result[0], 'boxes'):
-        detected_items = [result[0].names[int(box[5])] for box in result[0].boxes.data]
-    else:
-        logging.info("未檢測到任何物品")
+    detections1 = results1[0].boxes.cls.cpu().numpy().tolist()
+    detections2 = results2[0].boxes.cls.cpu().numpy().tolist()
 
-    return jsonify(detected_items=detected_items)
+    print("=====")
+    print(detections1)
+    print(detections2)
+    print("=====")
+
+    return jsonify({"Detections1": detections1, "Detections2": detections2})
 
 # 整理檢測結果
 def summarize_results_model(results, model_name):
     detected_classes = {}
     for result in results:
         for box in result.boxes.data:
-            class_id = int(box[5])  # 獲取類別ID
-            confidence = float(box[4])  # 獲取信心度
-            class_name = results[0].names[class_id]  # 根據類別ID獲取類別名稱
+            class_id = int(box[5])
+            confidence = float(box[4])
+            class_name = results[0].names[class_id]
             detected_classes.setdefault(class_name, []).append(confidence)
 
     summary = [f"{class_name}: {max(scores):.2f}" for class_name, scores in detected_classes.items()]
     return f"{model_name} detected: " + ", ".join(summary) if summary else f"{model_name} detected: No objects detected."
+
+
 
 
 
