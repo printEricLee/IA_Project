@@ -10,6 +10,7 @@ RUN pip install --upgrade pip && \
     Flask-SocketIO \
     tensorflow \
     numpy \
-    Flask-Mail
+    Flask-Mail \
+    flask-cors
 
 CMD ["python3", "app.py"]
