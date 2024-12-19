@@ -137,18 +137,77 @@
   <script>
 
     function loadStream() {
-      document.getElementById('loading').style.display = 'block';
-      document.getElementById('content').style.display = 'none';
-
-      const img = new Image();
-      img.src = "{{ url_for('imgpred') }}";
-
-      img.onload = function () {
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('content').style.display = 'block';
-      };
+      document.getElementById("loading").style.display = "block";
     }
 
+    function hideStream() {
+      document.getElementById("loading").style.display = "none";
+    }
+
+    function fetchDetectionResults() {
+      fetch('/get_image_results')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.Detections1 && data.Detections2) {
+            console.log('Detections1:', data.Detections1, 'Detections2:', data.Detections2);
+            updateDetectionList(data.Detections1, data.Detections2);
+          } else {
+            console.error('Unexpected data format:', data);
+          }
+        })
+    }
+
+    function updateDetectionList(detections1, detections2) {
+      const detectionList = document.getElementById('image-detection-list');
+      const items = detectionList.getElementsByTagName('li');
+
+      // Reset all items to not-detected status
+      for (let item of items) {
+        item.className = 'not-detected';
+      }
+
+      let detectedItems1 = [];
+      let detectedItems2 = [];
+
+      // Update detections1
+      detections1.forEach(detection => {
+        const item = detectionList.querySelector(`li[data-item="${detection}"][data-detection="1"]`);
+        if (item) {
+          item.className = 'detected';
+          detectedItems1.push(detection);
+        }
+      });
+
+      // Update detections2
+      detections2.forEach(detection => {
+        const item = detectionList.querySelector(`li[data-item="${detection}"][data-detection="2"]`);
+        if (item) {
+          item.className = 'detected';
+          detectedItems2.push(detection);
+        }
+      });
+
+      const yesNoBox = document.getElementById('yes-no-box');
+                if (detectedItems1.includes(2) || detectedItems1.length === 0) {
+                    yesNoBox.textContent = 'No';
+                    yesNoBox.style.backgroundColor = 'red';
+                } else {
+                    yesNoBox.textContent = 'Ok';
+                    yesNoBox.style.backgroundColor = 'green';
+                }
+    }
+
+    const img = new Image();
+    img.src = "{{ image_pred1 }}";
+
+    img.onload = function () {
+      fetchDetectionResults(); // 在頁面加載時獲取檢測結果
+    };
   </script>
 
 </head>
@@ -183,7 +242,6 @@
                   <i class="fas fa-chart-pie mr-1"></i>
                   Object Detection
                 </h3>
-                <!-- <button type="button" id="loading-show-message" id="reset-button" style="display: none;">重新上傳</button> -->
               </div>
 
               <div class="card-body">
@@ -191,8 +249,7 @@
                   <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 721px;">
 
                     {% if image_path %}
-                    <img src="{{ image_pred1 }}" alt="模型 1 結果" style="height: 721px;"
-                      onload="hide_word(); hideStream();show_word()" />
+                    <img src="{{ image_pred1 }}" alt="模型 1 結果" style="height: 721px;" onload="hide_word()" />
                     {% endif %}
 
                     <div class="container mt-5" id="loading-message">
