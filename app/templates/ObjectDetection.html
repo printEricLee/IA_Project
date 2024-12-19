@@ -135,71 +135,20 @@
   </style>
 
   <script>
+
     function loadStream() {
       document.getElementById('loading').style.display = 'block';
+      document.getElementById('content').style.display = 'none';
 
       const img = new Image();
       img.src = "{{ url_for('imgpred') }}";
 
       img.onload = function () {
-        document.getElementById('loading').style.display = 'block';
-        document.getElementById('content').style.display = 'none';
-
-        // 獲取檢測結果
-        fetch('/template_image_info')
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('Network response was not ok');
-            }
-            return response.json();
-          })
-          .then(data => {
-            if (data.detections1 && data.detections2) {
-              console.log('Detections1:', data.detections1, 'Detections2:', data.detections2); // 在控制台中顯示檢測結果
-              updateDetectionList(data.detections1, data.detections2); // 更新檢測列表
-            }
-          })
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
       };
-
-      function updateDetectionList(detections1, detections2) {
-        const detectionList = document.getElementById('image-detection-list');
-        const items = detectionList.getElementsByTagName('li');
-
-        // Reset all items to not-detected status
-        for (let item of items) {
-          item.className = 'not-detected';
-        }
-
-        let detectedItems1 = [];
-        let detectedItems2 = [];
-
-        // Update detections1
-        detections1.forEach(detection => {
-          const item = detectionList.querySelector(`li[data-item="${detection}"][data-detection="1"]`);
-          if (item) {
-            item.className = 'detected';
-            detectedItems1.push(detection);
-          }
-        });
-
-        // Update detections2
-        detections2.forEach(detection => {
-          const item = detectionList.querySelector(`li[data-item="${detection}"][data-detection="2"]`);
-          if (item) {
-            item.className = 'detected';
-            detectedItems2.push(detection);
-          }
-        });
-
-        const yesNoBox = document.getElementById('yes-no-box');
-        if (detectedItems1.includes(2) || detectedItems2.includes(1)) {
-          yesNoBox.textContent = 'No';
-          yesNoBox.style.backgroundColor = 'red';
-        }
-      }
     }
 
-    window.onload = loadStream;
   </script>
 
 </head>
@@ -300,15 +249,6 @@
       </div>
     </section>
   </div>
-
-  <!-- <script>
-    resetButton.addEventListener('click', () => {
-      window.location.href = "{{ url_for('objectDetection') }}";
-    });
-    document.getElementById('reset-button').addEventListener('click', function () {
-      window.location.href = "{{ url_for('objectDetection') }}";
-    });
-  </script> -->
 </body>
 
 </html>
