@@ -21,7 +21,7 @@ CORS(app)
 model_img = YOLO('model/Iteam_object.pt')  # 圖像檢測模型
 model_truck = YOLO('model/best.pt')  # 圖像檢測模型
 model_wd = YOLO('model/wet_dry.pt')        # 濕/乾分類模型
-link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
+link = 'static/template/Case_4.mp4' #'rtsp://admin:Abcd1@34@182.239.73.242:8554'
 
 # 生成唯一檔案名稱
 # def generate_unique_filename(filename):
@@ -731,6 +731,8 @@ def template_image_info():
 ########################################
 # 即時檢測功能
 ########################################
+frame_obj = None
+frame_wd = None
 
 @app.route('/rtsp_feed')
 def rtsp_feed():
@@ -738,22 +740,19 @@ def rtsp_feed():
 
 def generate_rtsp_stream():
     cap = cv2.VideoCapture(link)
+
+    global frame_obj
+    global frame_wd
+
     while True:
         ret, frame = cap.read()
         if not ret:
             break
 
-        results = model_img(frame, conf = 0.2)
-        detected_items = []
+        frame_obj = model_img(frame, conf = 0.6)
+        frame_wd = model_wd(frame, conf = 0.6)
 
-        if results and hasattr(results[0], 'boxes'):
-            detected_items = [results[0].names[int(box[5])] for box in results[0].boxes.data]
-
-        if 'truck' in detected_items:
-            annotated_frame = results[0].plot()
-        else:
-            annotated_frame = frame
-
+        annotated_frame = frame_obj[0].plot()
         ret, buffer = cv2.imencode('.jpg', annotated_frame)
         frame_bytes = buffer.tobytes()
 
@@ -763,33 +762,24 @@ def generate_rtsp_stream():
     cap.release()
     cv2.destroyAllWindows()
 
-@app.route('/live-detect')
-def live_detect():
-    detected_items = []
-    cap = cv2.VideoCapture(link)
+@app.route('/get_rtsp_results', methods=['GET'])
+def get_rtsp_results():
 
-    try:
-        ret, frame = cap.read()
-        if ret:
-            results = model_test(frame, conf = 0.2)
-            if results and hasattr(results[0], 'boxes'):
-                detected_items = [results[0].names[int(box[5])] for box in results[0].boxes.data]
-                
-                # 檢查是否檢測到卡車
-                # if 'truck' not in detected_items:
-                #     logging.info("未檢測到卡車，關閉功能或使用其他模型")
-                #     # 在這裡可以選擇使用其他模型或關閉功能
-                #     return jsonify(message="未檢測到卡車，功能已關閉")
-            else:
-                logging.info("未檢測到任何物品")
-        else:
-            logging.error("無法從視頻流讀取幀")
-    except Exception as e:
-        logging.error(f"實時檢測錯誤: {str(e)}")
-    finally:
-        cap.release()
+    global frame_obj
+    global frame_wd
 
-    return jsonify(detected_items=detected_items)
+    detections1 = frame_obj[0].boxes.cls.cpu().numpy().tolist()
+    detections2 = frame_wd[0].boxes.cls.cpu().numpy().tolist()
+
+    print("=====")
+    print(detections1)
+    print(detections2)
+    print("=====")
+    print(model_img.names)
+    print(model_wd.names)
+    print("=====")
+
+    return jsonify({"detections1": detections1, "detections2": detections2})
 
 ########################################
 # 啟動應用程式
