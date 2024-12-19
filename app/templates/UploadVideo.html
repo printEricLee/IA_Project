@@ -144,69 +144,71 @@
     }
 
     function fetchDetectionResults() {
-                    fetch('/get_detection_results')
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok');
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            if (data.detections1 && data.detections2) {
-                                console.log('Detections1:', data.detections1, 'Detections2:', data.detections2);
-                                updateDetectionList(data.detections1, data.detections2);
-                            }
-                        })
-                }
-
-    setInterval(fetchDetectionResults, 500); // 1 sec = 1000
-
-    function updateDetectionList(detections1, detections2) {
-                const detectionList = document.getElementById('image-detection-list');
-                const items = detectionList.getElementsByTagName('li');
-
-                // 重置所有項目為未檢測狀態
-                for (let item of items) {
-                    item.className = 'not-detected';
-                }
-
-                let detectedItems1 = [];
-                let detectedItems2 = [];
-
-                // 更新檢測列表
-                detections1.forEach(detection => {
-                    const item = detectionList.querySelector(`li[data-item="${detection}"][data-detection="1"]`);
-                    if (item) {
-                        item.className = 'detected';
-                        detectedItems1.push(detection);
-                    }
-                });
-
-                detections2.forEach(detection => {
-                    const item = detectionList.querySelector(`li[data-item="${detection}"][data-detection="2"]`);
-                    if (item) {
-                        item.className = 'detected';
-                        detectedItems2.push(detection);
-                    }
-                });
-
-                const yesNoBox = document.getElementById('yes-no-box');
-                if (!detectedItems1.includes(1)) {
-                    yesNoBox.textContent = 'No car bro are you no money';
-                    yesNoBox.style.backgroundColor = 'red';
-                } else {
-                    yesNoBox.textContent = 'Fine';
-                    yesNoBox.style.backgroundColor = 'green';
-                }
+      fetch('/get_detection_results')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.detections1 && data.detections2) {
+            console.log('Detections1:', data.detections1, 'Detections2:', data.detections2);
+            updateDetectionList(data.detections1, data.detections2);
+          }
+        })
     }
 
-    window.onload = function() {
-        fetchDetectionResults(); // 在頁面加載時獲取檢測結果
-        setInterval(fetchDetectionResults, 1000); // 每秒鐘獲取一次檢測結果
+    function updateDetectionList(detections1, detections2) {
+      const detectionList = document.getElementById('image-detection-list');
+      const items = detectionList.getElementsByTagName('li');
+
+      // 重置所有項目為未檢測狀態
+      for (let item of items) {
+        item.className = 'not-detected';
+      }
+
+      let detectedItems1 = [];
+      let detectedItems2 = [];
+
+      // 更新檢測列表
+      detections1.forEach(detection => {
+        const item = detectionList.querySelector(`li[data-item="${detection}"][data-detection="1"]`);
+        if (item) {
+          item.className = 'detected';
+          detectedItems1.push(detection);
+        }
+      });
+
+      detections2.forEach(detection => {
+        const item = detectionList.querySelector(`li[data-item="${detection}"][data-detection="2"]`);
+        if (item) {
+          item.className = 'detected';
+          detectedItems2.push(detection);
+        }
+      });
+
+      const yesNoBox = document.getElementById('yes-no-box');
+      if (!detectedItems1.includes(1)) {
+        yesNoBox.textContent = 'No car bro are you no money';
+        yesNoBox.style.backgroundColor = 'red';
+      } else {
+        yesNoBox.textContent = 'Fine';
+        yesNoBox.style.backgroundColor = 'green';
+      }
+    }
+
+    const img = new Image();
+    img.src = "{{ url_for('video_feed', filename=filename) }}";
+
+    img.onload = function () {
+      fetchDetectionResults();
+
+      setInterval(fetchDetectionResults, 1000); // 1 sec = 1000
     };
 
-    window.onbeforeunload = function() {
-        fetch('/stop_processing', { method: 'POST' });
+    window.onbeforeunload = function () {
+      fetch('/stop_processing', { method: 'POST' });
     };
   </script>
 
@@ -305,7 +307,7 @@
                     <li data-item="2" data-detection="2" class="not-detected">collection point
                     </li>
                     <li id="yes-no-box">#</li>
-                </ul>
+                  </ul>
 
                 </div>
               </div>
