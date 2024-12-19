@@ -196,6 +196,10 @@
         yesNoBox.textContent = 'Fine';
         yesNoBox.style.backgroundColor = 'green';
       }
+
+      if (!detectedItems1.includes(1) && !detectedItems1.includes(2)) {
+        document.querySelector('[data-detection="2"]').setAttribute('data-detection', 'not-detected');
+      }
     }
 
     const img = new Image();
