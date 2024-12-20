@@ -81,8 +81,8 @@ def template_video():
 def template_image():
     return render_template('template(image).html')
 
-
-
+print('model_truck:',model_truck.names)
+print('model_img:',model_img.names)
 
 
 
