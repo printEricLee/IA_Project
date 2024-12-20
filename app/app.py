@@ -13,8 +13,8 @@ from flask_mail import Mail, Message
 import random
 from io import BytesIO
 from flask_cors import CORS
-import gdown
-import panda as pd
+# import gdown
+# import panda as pd
 
 app = Flask(__name__)
 CORS(app)
@@ -552,7 +552,7 @@ def generate_template_frames(video_path):
             break
 
         # 第一步：检测卡车
-        truck_results = model_truck(frame, conf=0.6, classes=[1,2])
+        truck_results = model_truck(frame, conf=0.5, classes=[1,2])
         truck_detected = False
         truck_frame = None
         truck_box = None
@@ -585,7 +585,7 @@ def generate_template_frames(video_path):
 
         # 第三步：如果在卡车内未检测到物体，则检测整个画面
         if not detected_items and truck_detected:
-            object_results = model_truck(frame, conf=0.6, classes=[1,2])  # 在整个画面进行物体检测
+            object_results = model_truck(frame, conf=0.5, classes=[1,2])  # 在整个画面进行物体检测
             if object_results and hasattr(object_results[0], 'boxes'):
                 detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
 
@@ -599,15 +599,15 @@ def generate_template_frames(video_path):
                                     (x1_box, y1_box - 5), 
                                     cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 0, 0), 3)
 
-            # 第四步：绘制卡车的边界框（无论是否检测到物体）
-            if truck_box:
-                cv2.rectangle(frame, (truck_box[0], truck_box[1]), (truck_box[2], truck_box[3]), (0, 255, 0), 2)  # 卡车外框
-                cv2.putText(frame, 'Truck', (truck_box[0], truck_box[1] - 10), 
-                            cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 0), 3)
+        # 第四步：绘制卡车的边界框（无论是否检测到物体）
+        if truck_box:
+            cv2.rectangle(frame, (truck_box[0], truck_box[1]), (truck_box[2], truck_box[3]), (0, 255, 0), 2)  # 卡车外框
+            cv2.putText(frame, 'Truck', (truck_box[0], truck_box[1] - 10), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 0), 3)
 
         # 第五步：如果没有检测到卡车，则进行物体检测
         if not truck_detected:
-            object_results = model_truck(frame, conf=0.6, classes=[1,2])  # 在整个画面进行物体检测
+            object_results = model_truck(frame, conf=0.5, classes=[1,2])  # 在整个画面进行物体检测
             if object_results and hasattr(object_results[0], 'boxes'):
                 detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
 
