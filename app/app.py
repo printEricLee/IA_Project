@@ -81,8 +81,9 @@ def template_video():
 def template_image():
     return render_template('template(image).html')
 
-print('model_truck:',model_truck.names)
-print('model_img:',model_img.names)
+print('model_truck & detection1:',model_truck.names)
+print('model_img & detection2:',model_img.names)
+print('model_wd & detection3:',model_wd.names)
 
 
 
