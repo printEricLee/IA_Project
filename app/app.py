@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, Response, jsonify, send_from_directory, url_for, flash, send_file, stream_with_context
+from flask import Flask, render_template, request, redirect, Response, jsonify, send_from_directory, url_for, flash, send_file
 from ultralytics import YOLO
 import cv2
 import os
@@ -13,11 +13,20 @@ from flask_mail import Mail, Message
 import random
 from io import BytesIO
 from flask_cors import CORS
-# import gdown
-# import panda as pd
+import gdown
+import pandas as pd
 
 app = Flask(__name__)
 CORS(app)
+
+url_model = 'https://drive.google.com/drive/folders/1YwuzrzGD8GXd-70yRPmb7eorO9S9o6Ji?usp=drive_link'
+url_template = 'https://drive.google.com/drive/folders/1VX07l2XJMKwy_Dkhj5-17C_w_rsKpU6D?usp=drive_link'
+
+output_model = f"/model/"
+output_template = f"/static/"
+
+gdown.download(url_model, output_model, fuzzy=True)
+gdown.download(url_template, output_template, fuzzy=True)
 
 # 初始化 YOLO 模型
 model_img = YOLO('model/Iteam_object.pt')  # 圖像檢測模型
