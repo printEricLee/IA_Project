@@ -13,6 +13,8 @@ from flask_mail import Mail, Message
 import random
 from io import BytesIO
 from flask_cors import CORS
+import gdown
+import panda as pd
 
 app = Flask(__name__)
 CORS(app)
