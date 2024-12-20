@@ -19,14 +19,9 @@ import pandas as pd
 app = Flask(__name__)
 CORS(app)
 
-url_model = 'https://drive.google.com/drive/folders/1YwuzrzGD8GXd-70yRPmb7eorO9S9o6Ji?usp=drive_link'
-url_template = 'https://drive.google.com/drive/folders/1VX07l2XJMKwy_Dkhj5-17C_w_rsKpU6D?usp=drive_link'
+# url = "https://drive.google.com/drive/folders/1gaM5haNraI_oCCCRtShHpLDvJjVmm8Bn?usp=sharing"
 
-output_model = f"/model/"
-output_template = f"/static/"
-
-gdown.download(url_model, output_model, fuzzy=True)
-gdown.download(url_template, output_template, fuzzy=True)
+# gdown.download_folder(url)
 
 # 初始化 YOLO 模型
 model_img = YOLO('model/Iteam_object.pt')  # 圖像檢測模型
@@ -834,11 +829,11 @@ def rtsp_feed():
 #     cap.release()
 #     cv2.destroyAllWindows()
 
-def generate_rtsp_stream(video_path):
+def generate_rtsp_stream(link):
     global truck_results
     global object_results
 
-    cap = cv2.VideoCapture(video_path)
+    cap = cv2.VideoCapture(link)
     if not cap.isOpened():
         print("无法打开视频文件")  # 调试信息
         return
