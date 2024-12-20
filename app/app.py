@@ -552,9 +552,10 @@ def generate_template_frames(video_path):
             break
 
         # 第一步：检测卡车
-        truck_results = model_truck(frame, conf=0.5, classes=[1,2])
+        truck_results = model_truck(frame, conf=0.6, classes=[1,2])
         truck_detected = False
         truck_frame = None
+        truck_box = None
 
         if truck_results and hasattr(truck_results[0], 'boxes'):
             for box in truck_results[0].boxes.data:
@@ -564,6 +565,7 @@ def generate_template_frames(video_path):
                     # 获取卡车的边界框
                     x1, y1, x2, y2 = int(box[0]), int(box[1]), int(box[2]), int(box[3])
                     truck_frame = frame[y1:y2, x1:x2]  # 裁剪卡车区域
+                    truck_box = (x1, y1, x2, y2)  # 存储卡车框以便后用
                     break
 
         detected_items = []
@@ -573,7 +575,7 @@ def generate_template_frames(video_path):
             if object_results and hasattr(object_results[0], 'boxes'):
                 detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
 
-                # 绘制物体的边界框
+                # 绘制卡车内部物体的边界框
                 for box in object_results[0].boxes.data:
                     x1_box, y1_box, x2_box, y2_box = int(box[0]), int(box[1]), int(box[2]), int(box[3])
                     cv2.rectangle(frame, (x1_box + x1, y1_box + y1), (x2_box + x1, y2_box + y1), (255, 0, 0), 2)
@@ -581,14 +583,9 @@ def generate_template_frames(video_path):
                                 (x1_box + x1, y1_box + y1 - 5), 
                                 cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 0, 0), 3)
 
-            # 在主画面上标注卡车
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)  # 卡车外框
-            cv2.putText(frame, 'Truck', (x1, y1 - 10), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 0), 3)
-
         # 第三步：如果在卡车内未检测到物体，则检测整个画面
         if not detected_items and truck_detected:
-            object_results = model_truck(frame)  # 在整个画面进行物体检测
+            object_results = model_truck(frame, conf=0.6, classes=[1,2])  # 在整个画面进行物体检测
             if object_results and hasattr(object_results[0], 'boxes'):
                 detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
 
@@ -596,15 +593,21 @@ def generate_template_frames(video_path):
                 for box in object_results[0].boxes.data:
                     x1_box, y1_box, x2_box, y2_box = int(box[0]), int(box[1]), int(box[2]), int(box[3])
                     # 检查边界框是否与卡车重叠
-                    if not (x1 < x2_box and x2 > x1_box and y1 < y2_box and y2 > y1_box):  # 无重叠才绘制
+                    if not (truck_box and (truck_box[0] < x2_box and truck_box[2] > x1_box and truck_box[1] < y2_box and truck_box[3] > y1_box)):
                         cv2.rectangle(frame, (x1_box, y1_box), (x2_box, y2_box), (255, 0, 0), 2)
                         cv2.putText(frame, object_results[0].names[int(box[5])], 
                                     (x1_box, y1_box - 5), 
                                     cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 0, 0), 3)
 
-        # 第四步：如果没有检测到卡车，则进行物体检测
+            # 第四步：绘制卡车的边界框（无论是否检测到物体）
+            if truck_box:
+                cv2.rectangle(frame, (truck_box[0], truck_box[1]), (truck_box[2], truck_box[3]), (0, 255, 0), 2)  # 卡车外框
+                cv2.putText(frame, 'Truck', (truck_box[0], truck_box[1] - 10), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 0), 3)
+
+        # 第五步：如果没有检测到卡车，则进行物体检测
         if not truck_detected:
-            object_results = model_truck(frame)  # 在整个画面进行物体检测
+            object_results = model_truck(frame, conf=0.6, classes=[1,2])  # 在整个画面进行物体检测
             if object_results and hasattr(object_results[0], 'boxes'):
                 detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
 
@@ -616,7 +619,7 @@ def generate_template_frames(video_path):
                                 (x1_box, y1_box - 5), 
                                 cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 0, 0), 3)
 
-        # 第五步：处理主画面
+        # 第六步：处理主画面
         ret, buffer = cv2.imencode('.jpg', frame)
         frame_bytes = buffer.tobytes()
 
