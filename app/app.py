@@ -13,8 +13,8 @@ from flask_mail import Mail, Message
 import random
 from io import BytesIO
 from flask_cors import CORS
-import gdown
-import panda as pd
+# import gdown
+# import panda as pd
 
 app = Flask(__name__)
 CORS(app)
@@ -552,7 +552,7 @@ def generate_template_frames(video_path):
             break
 
         # 第一步：检测卡车
-        truck_results = model_truck(frame, conf=0.5)
+        truck_results = model_truck(frame, conf=0.5, classes=[1,2])
         truck_detected = False
         truck_frame = None
 
