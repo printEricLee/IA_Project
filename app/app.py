@@ -13,42 +13,30 @@ from flask_mail import Mail, Message
 import random
 from io import BytesIO
 from flask_cors import CORS
-import gdown
 import pandas as pd
+import gdown, sys
+
+os.makedirs('materials/', exist_ok=True)
+
+url = sys.argv[1]
+if url.split('/')[-1] == '?usp=sharing':
+  url= url.replace('?usp=sharing','')
+
+download_dir = 'materials'
+	
+if any(os.scandir(download_dir)):
+    print("skip")
+else:
+    print("downloading folder")
+    gdown.download_folder(url)
 
 app = Flask(__name__)
 CORS(app)
 
-url = "https://drive.google.com/drive/folders/1it7ZZxZrVUuNEceNbF726e1jcLR2YNUl?usp=sharing"
-
-gdown.download_folder(url)
-
-# 認證
-gauth = GoogleAuth()
-gauth.LocalWebserverAuth()  # 這會打開一個瀏覽器窗口進行授權
-drive = GoogleDrive(gauth)
-
-# 替換為你的 FOLDER_ID
-folder_id = '1gaM5haNraI_oCCCRtShHpLDvJjVmm8Bn?usp=sharing'
-
-# 獲取文件夾中的所有文件
-file_list = drive.ListFile({'q': f'"{folder_id}" in parents and trashed=false'}).GetList()
-
-# 創建本地文件夾
-if not os.path.exists('downloaded_folder'):
-    os.makedirs('downloaded_folder')
-
-# 下載每個文件
-for file in file_list:
-    print(f'Downloading {file["title"]}...')
-    file.GetContentFile(os.path.join('downloaded_folder', file['title']))
-
-print('所有文件已下載完成！')
-
 # 初始化 YOLO 模型
-model_img = YOLO('model/Iteam_object.pt')  # 圖像檢測模型
-model_truck = YOLO('model/best.pt')  # 圖像檢測模型
-model_wd = YOLO('model/wet_dry.pt')        # 濕/乾分類模型
+model_img = YOLO('materials/model/Iteam_object.pt')  # 圖像檢測模型
+model_truck = YOLO('materials/model/best.pt')  # 圖像檢測模型
+model_wd = YOLO('materials/model/wet_dry.pt')        # 濕/乾分類模型
 link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
 
 # 生成唯一檔案名稱
@@ -581,7 +569,7 @@ def stop_processing():
 ########################################
 @app.route('/template_feed')
 def template_feed():
-    folder_path = "static/template/"
+    folder_path = "materials/template/"
     video_paths = [file for file in os.listdir(folder_path) if file.endswith(".mp4")]
     
     video_path = os.path.join(folder_path, random.choice(video_paths))
@@ -748,8 +736,8 @@ def template_image_feed():
 
     global image_path
 
-    folder_path_yes = "static/template/yes"
-    folder_path_no = "static/template/no"
+    folder_path_yes = "materials/template/yes"
+    folder_path_no = "materials/template/no"
 
     image_paths_yes = [file for file in os.listdir(folder_path_yes) if file.endswith(('.jpg', '.jpeg'))]
     image_paths_no = [file for file in os.listdir(folder_path_no) if file.endswith(('.jpg', '.jpeg'))]
