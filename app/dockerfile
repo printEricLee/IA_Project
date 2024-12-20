@@ -11,6 +11,7 @@ RUN pip install --upgrade pip && \
     tensorflow \
     numpy \
     Flask-Mail \
-    flask-cors
+    flask-cors \
+    gdown
 
 CMD ["python3", "app.py"]
