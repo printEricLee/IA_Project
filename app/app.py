@@ -19,9 +19,31 @@ import pandas as pd
 app = Flask(__name__)
 CORS(app)
 
-# url = "https://drive.google.com/drive/folders/1gaM5haNraI_oCCCRtShHpLDvJjVmm8Bn?usp=sharing"
+url = "https://drive.google.com/drive/folders/1it7ZZxZrVUuNEceNbF726e1jcLR2YNUl?usp=sharing"
 
-# gdown.download_folder(url)
+gdown.download_folder(url)
+
+# 認證
+gauth = GoogleAuth()
+gauth.LocalWebserverAuth()  # 這會打開一個瀏覽器窗口進行授權
+drive = GoogleDrive(gauth)
+
+# 替換為你的 FOLDER_ID
+folder_id = '1gaM5haNraI_oCCCRtShHpLDvJjVmm8Bn?usp=sharing'
+
+# 獲取文件夾中的所有文件
+file_list = drive.ListFile({'q': f'"{folder_id}" in parents and trashed=false'}).GetList()
+
+# 創建本地文件夾
+if not os.path.exists('downloaded_folder'):
+    os.makedirs('downloaded_folder')
+
+# 下載每個文件
+for file in file_list:
+    print(f'Downloading {file["title"]}...')
+    file.GetContentFile(os.path.join('downloaded_folder', file['title']))
+
+print('所有文件已下載完成！')
 
 # 初始化 YOLO 模型
 model_img = YOLO('model/Iteam_object.pt')  # 圖像檢測模型
