@@ -549,7 +549,7 @@ def generate_template_frames(video_path):
             print("未能读取到帧")  # 调试信息
             break
 
-        # 首先檢測卡車
+        # 第一步：检测卡车
         truck_results = model_truck(frame, conf=0.5)
         truck_detected = False
         truck_frame = None
@@ -557,41 +557,68 @@ def generate_template_frames(video_path):
         if truck_results and hasattr(truck_results[0], 'boxes'):
             for box in truck_results[0].boxes.data:
                 class_id = int(box[5])
-                if truck_results[0].names[class_id] == 'box':  # 檢測到卡車
+                if truck_results[0].names[class_id] == 'box':  # 检测到卡车
                     truck_detected = True
-                    # 獲取卡車的邊界框
+                    # 获取卡车的边界框
                     x1, y1, x2, y2 = int(box[0]), int(box[1]), int(box[2]), int(box[3])
-                    truck_frame = frame[y1:y2, x1:x2]  # 裁剪卡車區域
+                    truck_frame = frame[y1:y2, x1:x2]  # 裁剪卡车区域
                     break
 
         detected_items = []
-        # 在卡車區域內進行物體檢測
+        # 第二步：如果检测到卡车，则在卡车内部进行物体检测
         if truck_detected and truck_frame is not None:
-            object_results = model_img(truck_frame)  # 在卡車內部進行物體檢測
+            object_results = model_img(truck_frame)  # 在卡车内部进行物体检测
             if object_results and hasattr(object_results[0], 'boxes'):
                 detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
 
-                # 在卡車區域內繪製物體的邊界框
+                # 绘制物体的边界框
                 for box in object_results[0].boxes.data:
                     x1_box, y1_box, x2_box, y2_box = int(box[0]), int(box[1]), int(box[2]), int(box[3])
-                    # 在主畫面上繪製邊界框
                     cv2.rectangle(frame, (x1_box + x1, y1_box + y1), (x2_box + x1, y2_box + y1), (255, 0, 0), 2)
-                    # 更改字體大小和粗細
                     cv2.putText(frame, object_results[0].names[int(box[5])], 
                                 (x1_box + x1, y1_box + y1 - 5), 
-                                cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 0, 0), 3)  # 增大字體和粗細
+                                cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 0, 0), 3)
 
-            # 在主畫面上標註卡車
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)  # 在卡車外框上畫矩形
-            # 在卡車框內顯示 "Truck"
+            # 在主画面上标注卡车
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)  # 卡车外框
             cv2.putText(frame, 'Truck', (x1, y1 - 10), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 3)  # 增大字體和粗細
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 0), 3)
 
-        # 處理主畫面
+        # 第三步：如果在卡车内未检测到物体，则检测整个画面
+        if not detected_items and truck_detected:
+            object_results = model_truck(frame)  # 在整个画面进行物体检测
+            if object_results and hasattr(object_results[0], 'boxes'):
+                detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
+
+                # 绘制卡车外的物体边界框，避免与卡车重叠
+                for box in object_results[0].boxes.data:
+                    x1_box, y1_box, x2_box, y2_box = int(box[0]), int(box[1]), int(box[2]), int(box[3])
+                    # 检查边界框是否与卡车重叠
+                    if not (x1 < x2_box and x2 > x1_box and y1 < y2_box and y2 > y1_box):  # 无重叠才绘制
+                        cv2.rectangle(frame, (x1_box, y1_box), (x2_box, y2_box), (255, 0, 0), 2)
+                        cv2.putText(frame, object_results[0].names[int(box[5])], 
+                                    (x1_box, y1_box - 5), 
+                                    cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 0, 0), 3)
+
+        # 第四步：如果没有检测到卡车，则进行物体检测
+        if not truck_detected:
+            object_results = model_truck(frame)  # 在整个画面进行物体检测
+            if object_results and hasattr(object_results[0], 'boxes'):
+                detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
+
+                # 绘制主画面上的物体边界框
+                for box in object_results[0].boxes.data:
+                    x1_box, y1_box, x2_box, y2_box = int(box[0]), int(box[1]), int(box[2]), int(box[3])
+                    cv2.rectangle(frame, (x1_box, y1_box), (x2_box, y2_box), (255, 0, 0), 2)
+                    cv2.putText(frame, object_results[0].names[int(box[5])], 
+                                (x1_box, y1_box - 5), 
+                                cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 0, 0), 3)
+
+        # 第五步：处理主画面
         ret, buffer = cv2.imencode('.jpg', frame)
         frame_bytes = buffer.tobytes()
 
-        # 發送主畫面和卡車畫面
+        # 发送主画面和卡车画面（如果可用）
         if truck_frame is not None:
             ret, truck_buffer = cv2.imencode('.jpg', truck_frame)
             yield (b'--frame\r\n'
