@@ -13,13 +13,15 @@ from flask_mail import Mail, Message
 import random
 from io import BytesIO
 from flask_cors import CORS
-import requests
-import zipfile
+import gdown
 import pandas as pd
-import shutil
 
 app = Flask(__name__)
 CORS(app)
+
+# url = "https://drive.google.com/drive/folders/1gaM5haNraI_oCCCRtShHpLDvJjVmm8Bn?usp=sharing"
+
+# gdown.download_folder(url)
 
 # 初始化 YOLO 模型
 model_img = YOLO('model/Iteam_object.pt')  # 圖像檢測模型
