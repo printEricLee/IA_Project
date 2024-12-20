@@ -4,12 +4,13 @@ WORKDIR /app
 
 RUN pip install --upgrade pip && \
     pip install \
+    numpy \
+    panda \
     ultralytics \
     flask \
     opencv-python \
     Flask-SocketIO \
     tensorflow \
-    numpy \
     Flask-Mail \
     flask-cors \
     gdown
