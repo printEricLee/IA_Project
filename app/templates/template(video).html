@@ -201,10 +201,6 @@
                     yesNoBox.textContent = 'Yes';
                     yesNoBox.style.backgroundColor = 'green';
                 }
-
-                if (!detectedItems1.includes(1) && !detectedItems1.includes(2)) {
-                    document.querySelector('[data-detection="2"]').setAttribute('data-detection', 'not-detected');
-                }
             }
         }
 
@@ -277,15 +273,12 @@
                                         style="position: relative; height: 748px;">
 
                                         <ul id="image-detection-list" class="detection-list text-center">
-                                            <li data-item="1" data-detection="2" class="not-detected">truck</li>
-                                            <li data-item="2" data-detection="2" class="not-detected">collection point
-                                            </li>
-                                            <li data-item="1" data-detection="1" class="not-detected">rock</li>
-                                            <li data-item="2" data-detection="1" class="not-detected">slurry</li>
-                                            <li data-item="3" data-detection="1" class="not-detected">soil</li>
-                                            <li data-item="Non-inert" class="not-detected">Non-inert</li>
-                                            <li data-item="inert" class="not-detected">inert</li>
-                                            <li data-item="1" class="not-detected">wet</li>
+                                            <li data-item="1" data-detection="1" class="not-detected">truck</li>
+                                            <li data-item="2" data-detection="1" class="not-detected">collection point</li>
+                                            <li data-item="2" data-detection="2" class="not-detected">slurry</li>
+                                            <li data-item="1" data-detection="2" class="not-detected">other</li>
+                                            <li data-item="0" data-detection="2" class="not-detected">close</li>
+                                            <li data-item="#" data-detection="3" class="not-detected">wet</li>
                                             <li id="yes-no-box">#</li>
                                         </ul>
 
