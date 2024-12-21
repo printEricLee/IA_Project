@@ -18,43 +18,11 @@ import gdown, sys
 
 os.makedirs('materials/', exist_ok=True)
 
-
-api = 'AIzaSyADMtYxeo2iTz0L4srVS8564Scp92LYoPw'
-
-url = 'https://drive.google.com/drive/folders/1it7ZZxZrVUuNEceNbF726e1jcLR2YNUl?usp=sharing'
+url = sys.argv[1]
+if url.split('/')[-1] == '?usp=sharing':
+  url= url.replace('?usp=sharing','')
 
 download_dir = 'materials'
-
-def main():
-    # 建立服務
-    service = build('drive', 'v3', developerKey=API_KEY)
-
-    # 指定資料夾 ID
-    folder_id = '1it7ZZxZrVUuNEceNbF726e1jcLR2YNUl'  # 你的資料夾 ID
-    
-    # 獲取資料夾中的檔案
-    query = f"'{folder_id}' in parents"
-    results = service.files().list(q=query).execute()
-    items = results.get('files', [])
-
-    if not items:
-        print('資料夾中沒有檔案。')
-    else:
-        for item in items:
-            print(f'正在下載檔案: {item["name"]}')
-            request = service.files().get_media(fileId=item['id'])
-            fh = io.BytesIO()
-            downloader = MediaIoBaseDownload(fh, request)
-            done = False
-            while done is False:
-                status, done = downloader.next_chunk()
-                print(f'下載進度: {int(status.progress() * 100)}%')
-            fh.seek(0)
-
-            # 儲存檔案
-            with open(item['name'], 'wb') as f:
-                f.write(fh.read())
-                print(f'{item["name"]} 下載完成！')
 	
 if any(os.scandir(download_dir)):
     print("skip")
