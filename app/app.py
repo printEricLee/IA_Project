@@ -16,19 +16,78 @@ from flask_cors import CORS
 import pandas as pd
 import gdown, sys
 
-os.makedirs('materials/', exist_ok=True)
+import io
+import os
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseDownload
+from google_auth_oauthlib.flow import InstalledAppFlow
 
-url = sys.argv[1]
-if url.split('/')[-1] == '?usp=sharing':
-  url= url.replace('?usp=sharing','')
+CREDENTIALS_FILE = 'client_secret_10875450332-bc8mhv9q2fts2cf5pc1f4akiv55vmpvr.apps.googleusercontent.com.json'
 
-download_dir = 'materials'
-	
-if any(os.scandir(download_dir)):
-    print("skip")
-else:
-    print("downloading folder")
-    gdown.download_folder(url)
+def authenticate():
+    creds = None
+    try:
+        if os.path.exists('token.json'):
+            creds = Credentials.from_authorized_user_file('token.json')
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    CREDENTIALS_FILE, scopes=['https://www.googleapis.com/auth/drive'])
+                creds = flow.run_local_server(port=0)
+                with open('token.json', 'w') as token:
+                    token.write(creds.to_json())
+    except Exception as e:
+        print(f"授權過程中出現錯誤: {e}")
+        return None
+    return build('drive', 'v3', credentials=creds)
+
+def download_file(service, file_id, file_name):
+    request = service.files().get_media(fileId=file_id)
+    fh = io.BytesIO()
+    downloader = MediaIoBaseDownload(fh, request)
+    done = False
+    while not done:
+        status, done = downloader.next_chunk()
+        print(f'Downloading {file_name} {int(status.progress() * 100)}%.')
+
+    with open(file_name, 'wb') as f:
+        f.write(fh.getbuffer())
+
+def download_folder(service, folder_id, parent_folder_path):
+    try:
+        # 取得資料夾內的檔案和子資料夾
+        results = service.files().list(q=f"'{folder_id}' in parents").execute()
+        items = results.get('files', [])
+
+        # 如果資料夾是空的
+        if not items:
+            print(f"資料夾 {parent_folder_path} 是空的，沒有檔案可下載。")
+            return
+
+        # 創建本地資料夾
+        if not os.path.exists(parent_folder_path):
+            os.makedirs(parent_folder_path)
+
+        for item in items:
+            item_path = os.path.join(parent_folder_path, item['name'])
+            if item['mimeType'] == 'application/vnd.google-apps.folder':
+                print(f"正在下載子資料夾: {item['name']}")
+                download_folder(service, item['id'], item_path)  # 遞迴下載子資料夾
+            else:
+                print(f"正在下載檔案: {item['name']}")
+                download_file(service, item['id'], item_path)  # 下載檔案
+    except Exception as e:
+        print(f"下載資料夾時出現錯誤: {e}")
+
+def main():
+    service = authenticate()
+    if service:
+        folder_id = '1it7ZZxZrVUuNEceNbF726e1jcLR2YNUl'  # 替換為您的資料夾 ID
+        download_folder(service, folder_id, 'materials')  # 設定下載的根資料夾名稱
 
 app = Flask(__name__)
 CORS(app)
@@ -963,4 +1022,8 @@ def get_rtsp_results():
 # 啟動應用程式
 ########################################
 if __name__ == '__main__':
+    print("程式開始執行")
+    main()
     app.run(host="0.0.0.0", port=8080, debug=True)
+    print("程式執行完畢")
+    
