@@ -15,6 +15,7 @@ services:
     container_name: CW_fyp
     volumes:
       - ./app:/app
+      - ./cookies.txt:/root/.cache/gdown/cookies.txt
     environment:
       - NVIDIA_VISIBLE_DEVICES=all # allow useing nvidia gpu
       - INTEL_VISIBLE_DEVICES=all # allow useing intel gpu
