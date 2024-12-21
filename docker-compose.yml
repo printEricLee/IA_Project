@@ -15,7 +15,8 @@ services:
     container_name: CW_fyp
     volumes:
       - ./app:/app
-      - ./cookies.txt:/root/.cache/gdown/cookies.txt
+      - ./client_secret_10875450332-bc8mhv9q2fts2cf5pc1f4akiv55vmpvr.apps.googleusercontent.com.json:/client_secret_10875450332-bc8mhv9q2fts2cf5pc1f4akiv55vmpvr.apps.googleusercontent.com.json
+      - ./token.json:/token.json
     environment:
       - NVIDIA_VISIBLE_DEVICES=all # allow useing nvidia gpu
       - INTEL_VISIBLE_DEVICES=all # allow useing intel gpu
