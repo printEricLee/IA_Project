@@ -18,29 +18,17 @@ import gdown, sys
 import io
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from google_auth_oauthlib.flow import InstalledAppFlow
 
-CREDENTIALS_FILE = 'client_secret_10875450332-bc8mhv9q2fts2cf5pc1f4akiv55vmpvr.apps.googleusercontent.com.json'
+SERVICE_ACCOUNT_FILE = '/aaaaaaa-445412-e5fe62e3ec2f.json'
+SCOPES = ['https://www.googleapis.com/auth/drive']
 
 def authenticate():
-    creds = None
-    try:
-        if os.path.exists('token.json'):
-            creds = Credentials.from_authorized_user_file('token.json')
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-            else:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    CREDENTIALS_FILE, scopes=['https://www.googleapis.com/auth/drive'])
-                creds = flow.run_local_server(port=0)
-                with open('token.json', 'w') as token:
-                    token.write(creds.to_json())
-    except Exception as e:
-        print(f"授權過程中出現錯誤: {e}")
-        return None
+    creds = service_account.Credentials.from_service_account_file(
+        SERVICE_ACCOUNT_FILE, scopes=SCOPES)
     return build('drive', 'v3', credentials=creds)
 
 def download_file(service, file_id, file_name):
@@ -51,22 +39,19 @@ def download_file(service, file_id, file_name):
     while not done:
         status, done = downloader.next_chunk()
         print(f'Downloading {file_name} {int(status.progress() * 100)}%.')
-
+    
     with open(file_name, 'wb') as f:
         f.write(fh.getbuffer())
 
 def download_folder(service, folder_id, parent_folder_path):
     try:
-        # 取得資料夾內的檔案和子資料夾
         results = service.files().list(q=f"'{folder_id}' in parents").execute()
         items = results.get('files', [])
-
-        # 如果資料夾是空的
+        
         if not items:
             print(f"資料夾 {parent_folder_path} 是空的，沒有檔案可下載。")
             return
-
-        # 創建本地資料夾
+        
         if not os.path.exists(parent_folder_path):
             os.makedirs(parent_folder_path)
 
@@ -74,10 +59,10 @@ def download_folder(service, folder_id, parent_folder_path):
             item_path = os.path.join(parent_folder_path, item['name'])
             if item['mimeType'] == 'application/vnd.google-apps.folder':
                 print(f"正在下載子資料夾: {item['name']}")
-                download_folder(service, item['id'], item_path)  # 遞迴下載子資料夾
+                download_folder(service, item['id'], item_path)
             else:
                 print(f"正在下載檔案: {item['name']}")
-                download_file(service, item['id'], item_path)  # 下載檔案
+                download_file(service, item['id'], item_path)
     except Exception as e:
         print(f"下載資料夾時出現錯誤: {e}")
 
@@ -304,7 +289,7 @@ def imgpred():
         # auto_send_imageResult(summary1, summary2, original_image_path)
 
         return render_template('ObjectDetection.html', summary1=summary1, image_pred1=result_path1,
-                               summary2=summary2, image_pred2=result_path2, image_path=original_image_path)
+                            summary2=summary2, image_pred2=result_path2, image_path=original_image_path)
 
     return render_template('index.html', image_path=None)
 
@@ -552,12 +537,12 @@ def generate_video_frames(video_path):
         if truck_frame is not None:
             ret, truck_buffer = cv2.imencode('.jpg', truck_frame)
             yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n'
-                   b'--truck-frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + truck_buffer.tobytes() + b'\r\n')
+                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n'
+                b'--truck-frame\r\n'
+                b'Content-Type: image/jpeg\r\n\r\n' + truck_buffer.tobytes() + b'\r\n')
         else:
             yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
     cap.release()
     cv2.destroyAllWindows()
@@ -728,12 +713,12 @@ def generate_template_frames(video_path):
         if truck_frame is not None:
             ret, truck_buffer = cv2.imencode('.jpg', truck_frame)
             yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n'
-                   b'--truck-frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + truck_buffer.tobytes() + b'\r\n')
+                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n'
+                b'--truck-frame\r\n'
+                b'Content-Type: image/jpeg\r\n\r\n' + truck_buffer.tobytes() + b'\r\n')
         else:
             yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
     cap.release()
     cv2.destroyAllWindows()
@@ -757,7 +742,7 @@ def template_video_info():
         "detections1": detections1,
         "detections2": detections2
     })
-     
+    
 
 
 
@@ -987,12 +972,12 @@ def generate_rtsp_stream(link):
         if truck_frame is not None:
             ret, truck_buffer = cv2.imencode('.jpg', truck_frame)
             yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n'
-                   b'--truck-frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + truck_buffer.tobytes() + b'\r\n')
+                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n'
+                b'--truck-frame\r\n'
+                b'Content-Type: image/jpeg\r\n\r\n' + truck_buffer.tobytes() + b'\r\n')
         else:
             yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
     cap.release()
     cv2.destroyAllWindows()
@@ -1020,8 +1005,8 @@ def get_rtsp_results():
 # 啟動應用程式
 ########################################
 if __name__ == '__main__':
+    app.run(host="0.0.0.0", port=8080, debug=True)
     print("程式開始執行")
     main()
-    app.run(host="0.0.0.0", port=8080, debug=True)
     print("程式執行完畢")
     
