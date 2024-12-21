@@ -15,4 +15,4 @@ RUN pip install --upgrade pip && \
     flask-cors \
     gdown
 
-CMD ["python3", "app.py", "https://drive.google.com/drive/folders/1it7ZZxZrVUuNEceNbF726e1jcLR2YNUl?usp=sharing"]
+CMD ["python3", "app.py"]
