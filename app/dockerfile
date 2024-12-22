@@ -13,10 +13,6 @@ RUN pip install --upgrade pip && \
     tensorflow \
     Flask-Mail \
     flask-cors \
-    gdown \
-    google-auth \
-    google-auth-oauthlib \
-    google-auth-httplib2 \
-    google-api-python-client
+    gdown
 
 CMD ["python3", "app.py"]
