@@ -1,7 +1,11 @@
 from flask import Flask, render_template, request, redirect, Response, jsonify, send_from_directory, url_for, flash, send_file
+# YOLO package
 from ultralytics import YOLO
+# opencv package
 import cv2
+# make error message
 import os
+# give file name package
 import time
 from datetime import datetime
 import uuid
@@ -9,18 +13,24 @@ import threading
 import numpy as np
 from PIL import Image
 import logging
+# send email package
 from flask_mail import Mail, Message
 import random
 from io import BytesIO
 from flask_cors import CORS
 import pandas as pd
-import gdown, sys
+# google drive download package
+import gdown
 
 url = 'https://drive.google.com/drive/folders/1it7ZZxZrVUuNEceNbF726e1jcLR2YNUl?usp=sharing'
 
-output = 'materials'
+OutputMainPath = 'materials'
 
-os.makedirs(output, )
+os.makedirs(os.path.join(OutputMainPath, 'model'), exist_ok=True)
+os.makedirs(os.path.join(OutputMainPath, 'template'), exist_ok=True)
+
+gdown
+
 app = Flask(__name__)
 CORS(app)
 
