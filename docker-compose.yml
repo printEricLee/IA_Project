@@ -15,7 +15,6 @@ services:
     container_name: CW_fyp
     volumes:
       - ./app:/app
-      - ./aaaaaaa-445412-e5fe62e3ec2f.json:/aaaaaaa-445412-e5fe62e3ec2f.json
     environment:
       - NVIDIA_VISIBLE_DEVICES=all # allow useing nvidia gpu
       - INTEL_VISIBLE_DEVICES=all # allow useing intel gpu
