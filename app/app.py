@@ -3,7 +3,6 @@ from flask import Flask, render_template, request, redirect, Response, jsonify, 
 from ultralytics import YOLO
 # opencv package
 import cv2
-# make error message
 import os
 # give file name package
 import time
@@ -22,23 +21,33 @@ import pandas as pd
 # google drive download package
 import gdown
 
-url = 'https://drive.google.com/drive/folders/1it7ZZxZrVUuNEceNbF726e1jcLR2YNUl?usp=sharing'
-
-OutputMainPath = 'materials'
-
-os.makedirs(os.path.join(OutputMainPath, 'model'), exist_ok=True)
-os.makedirs(os.path.join(OutputMainPath, 'template'), exist_ok=True)
-
-gdown
-
 app = Flask(__name__)
 CORS(app)
 
-# 初始化 YOLO 模型
-model_img = YOLO('materials/model/Iteam_object.pt')  # 圖像檢測模型
-model_truck = YOLO('materials/model/best.pt')  # 圖像檢測模型
-model_wd = YOLO('materials/model/wet_dry.pt')        # 濕/乾分類模型
-link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
+def download() :
+    folder_id = [
+        '1WuSyGvqkdt0o8xcMpDPMrmZ28qYK1yE8', # model
+        '1nBZdNyU_CUixPJw6098QQFdOOC0Hr7qU']# template
+
+    os.makedirs('materials', exist_ok=True)
+    os.makedirs(os.path.join('materials', 'model'), exist_ok=True)
+    os.makedirs(os.path.join('materials', 'template'), exist_ok=True)
+
+    for folder_id in folder_ids:
+        try:
+            if folder_id == '1WuSyGvqkdt0o8xcMpDPMrmZ28qYK1yE8':
+                gdown.download_folder(id=folder_id, output='materials/model', quiet=False)
+            else:
+                gdown.download_folder(id=folder_id, output='materials/template', quiet=False)
+        except Exception as e:
+            print(f"Stop download!")
+
+def model():
+    # 初始化 YOLO 模型
+    model_img = YOLO('materials/model/Iteam_object.pt')  # 圖像檢測模型
+    model_truck = YOLO('materials/model/best.pt')  # 圖像檢測模型
+    model_wd = YOLO('materials/model/wet_dry.pt')        # 濕/乾分類模型
+    link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
 
 
 # 生成唯一檔案名稱
@@ -99,9 +108,9 @@ def template_video():
 def template_image():
     return render_template('template(image).html')
 
-print('model_truck & detection1:',model_truck.names)
-print('model_img & detection2:',model_img.names)
-print('model_wd & detection3:',model_wd.names)
+# print('model_truck & detection1:',model_truck.names)
+# print('model_img & detection2:',model_img.names)
+# print('model_wd & detection3:',model_wd.names)
 
 
 
@@ -965,5 +974,6 @@ def get_rtsp_results():
 # 啟動應用程式
 ########################################
 if __name__ == '__main__':
+    download()
     app.run(host="0.0.0.0", port=8080, debug=True)
 
