@@ -58,9 +58,9 @@ def download_and_initialize_models():
     for folder_id in folder_ids:
         try:
             if folder_id == '1WuSyGvqkdt0o8xcMpDPMrmZ28qYK1yE8':
-                gdown.download_folder(id=folder_id, output='model', quiet=False)
+                gdown.download(id=folder_id, output='model')
             else:
-                gdown.download_folder(id=folder_id, output='static/template', quiet=False)
+                gdown.download(id=folder_id, output='static/template')
 
         except Exception as e:
             print(f"下載中止！錯誤信息: {e}")
@@ -70,7 +70,7 @@ def download_and_initialize_models():
         model_img = YOLO('model/Iteam_object.pt')  # 圖像檢測模型
         model_truck = YOLO('model/best.pt')  # 圖像檢測模型
         model_wd = YOLO('model/wet_dry.pt')   # 濕/乾分類模型
-        link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
+        link = 'aaa'
     else:
         print("模型文件不存在，無法初始化模型！")
         return None  # 返回 None 或者引發異常
