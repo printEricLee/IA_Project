@@ -24,30 +24,59 @@ import gdown
 app = Flask(__name__)
 CORS(app)
 
-def download() :
-    folder_id = [
-        '1WuSyGvqkdt0o8xcMpDPMrmZ28qYK1yE8', # model
-        '1nBZdNyU_CUixPJw6098QQFdOOC0Hr7qU']# template
+# def download() :
+#     folder_ids = [
+#         '1WuSyGvqkdt0o8xcMpDPMrmZ28qYK1yE8', # model
+#         '1nBZdNyU_CUixPJw6098QQFdOOC0Hr7qU']# template
 
-    os.makedirs('materials', exist_ok=True)
-    os.makedirs(os.path.join('materials', 'model'), exist_ok=True)
-    os.makedirs(os.path.join('materials', 'template'), exist_ok=True)
+#     os.makedirs('model', exist_ok=True)
+#     os.makedirs(os.path.join('materials', 'template'), exist_ok=True)
+
+#     for folder_id in folder_ids:
+#         try:
+#             if folder_id == '1WuSyGvqkdt0o8xcMpDPMrmZ28qYK1yE8':
+#                 gdown.download_folder(id=folder_id, output='model', quiet=False)
+#             else:
+#                 gdown.download_folder(id=folder_id, output='static/template', quiet=False)
+#         except Exception as e:
+#             print(f"Stop download!")
+
+# # 初始化 YOLO 模型
+# model_img = YOLO('model/Iteam_object.pt')  # 圖像檢測模型
+# model_truck = YOLO('model/best.pt')  # 圖像檢測模型
+# model_wd = YOLO('model/wet_dry.pt')        # 濕/乾分類模型
+# link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
+
+def download_and_initialize_models():
+    folder_ids = [
+        '1WuSyGvqkdt0o8xcMpDPMrmZ28qYK1yE8',  # model
+        '1nBZdNyU_CUixPJw6098QQFdOOC0Hr7qU'   # template
+    ]
+
+    os.makedirs('model', exist_ok=True)
 
     for folder_id in folder_ids:
         try:
             if folder_id == '1WuSyGvqkdt0o8xcMpDPMrmZ28qYK1yE8':
-                gdown.download_folder(id=folder_id, output='materials/model', quiet=False)
+                gdown.download_folder(id=folder_id, output='model', quiet=False)
             else:
-                gdown.download_folder(id=folder_id, output='materials/template', quiet=False)
-        except Exception as e:
-            print(f"Stop download!")
+                gdown.download_folder(id=folder_id, output='static/template', quiet=False)
 
-def model():
+        except Exception as e:
+            print(f"下載中止！錯誤信息: {e}")
+
     # 初始化 YOLO 模型
-    model_img = YOLO('materials/model/Iteam_object.pt')  # 圖像檢測模型
-    model_truck = YOLO('materials/model/best.pt')  # 圖像檢測模型
-    model_wd = YOLO('materials/model/wet_dry.pt')        # 濕/乾分類模型
-    link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
+    if os.path.exists('model/Iteam_object.pt'):
+        model_img = YOLO('model/Iteam_object.pt')  # 圖像檢測模型
+        model_truck = YOLO('model/best.pt')  # 圖像檢測模型
+        model_wd = YOLO('model/wet_dry.pt')   # 濕/乾分類模型
+        link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
+    else:
+        print("模型文件不存在，無法初始化模型！")
+        return None  # 返回 None 或者引發異常
+
+    return model_img, model_truck, model_wd, link
+
 
 
 # 生成唯一檔案名稱
@@ -580,7 +609,7 @@ def stop_processing():
 ########################################
 @app.route('/template_feed')
 def template_feed():
-    folder_path = "materials/template/"
+    folder_path = "static/template/"
     video_paths = [file for file in os.listdir(folder_path) if file.endswith(".mp4")]
     
     video_path = os.path.join(folder_path, random.choice(video_paths))
@@ -747,8 +776,8 @@ def template_image_feed():
 
     global image_path
 
-    folder_path_yes = "materials/template/yes"
-    folder_path_no = "materials/template/no"
+    folder_path_yes = "static/template/yes"
+    folder_path_no = "static/template/no"
 
     image_paths_yes = [file for file in os.listdir(folder_path_yes) if file.endswith(('.jpg', '.jpeg'))]
     image_paths_no = [file for file in os.listdir(folder_path_no) if file.endswith(('.jpg', '.jpeg'))]
@@ -850,7 +879,7 @@ def rtsp_feed():
 #     cap.release()
 #     cv2.destroyAllWindows()
 
-def generate_rtsp_stream(link):
+def generate_rtsp_stream():
     global truck_results
     global object_results
 
@@ -858,15 +887,15 @@ def generate_rtsp_stream(link):
     if not cap.isOpened():
         print("无法打开视频文件")  # 调试信息
         return
-    
-    while cap.isOpened():
-        ret, frame = cap.read()
+
+    while True:
+        ret, frame = cap.read()  # 读取视频帧
         if not ret:
-            print("未能读取到帧")  # 调试信息
+            print("无法读取视频帧")
             break
 
         # 第一步：检测卡车
-        truck_results = model_truck(frame, conf=0.5, classes=[1,2])
+        truck_results = model_truck(frame, conf=0.5, classes=[1, 2])
         truck_detected = False
         truck_frame = None
         truck_box = None
@@ -876,7 +905,6 @@ def generate_rtsp_stream(link):
                 class_id = int(box[5])
                 if truck_results[0].names[class_id] == 'box':  # 检测到卡车
                     truck_detected = True
-                    # 获取卡车的边界框
                     x1, y1, x2, y2 = int(box[0]), int(box[1]), int(box[2]), int(box[3])
                     truck_frame = frame[y1:y2, x1:x2]  # 裁剪卡车区域
                     truck_box = (x1, y1, x2, y2)  # 存储卡车框以便后用
@@ -899,14 +927,13 @@ def generate_rtsp_stream(link):
 
         # 第三步：如果在卡车内未检测到物体，则检测整个画面
         if not detected_items and truck_detected:
-            object_results = model_truck(frame, conf=0.5, classes=[1,2])  # 在整个画面进行物体检测
+            object_results = model_truck(frame, conf=0.5, classes=[1, 2])  # 在整个画面进行物体检测
             if object_results and hasattr(object_results[0], 'boxes'):
                 detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
 
                 # 绘制卡车外的物体边界框，避免与卡车重叠
                 for box in object_results[0].boxes.data:
                     x1_box, y1_box, x2_box, y2_box = int(box[0]), int(box[1]), int(box[2]), int(box[3])
-                    # 检查边界框是否与卡车重叠
                     if not (truck_box and (truck_box[0] < x2_box and truck_box[2] > x1_box and truck_box[1] < y2_box and truck_box[3] > y1_box)):
                         cv2.rectangle(frame, (x1_box, y1_box), (x2_box, y2_box), (255, 0, 0), 2)
                         cv2.putText(frame, object_results[0].names[int(box[5])], 
@@ -921,7 +948,7 @@ def generate_rtsp_stream(link):
 
         # 第五步：如果没有检测到卡车，则进行物体检测
         if not truck_detected:
-            object_results = model_truck(frame, conf=0.5, classes=[1,2])  # 在整个画面进行物体检测
+            object_results = model_truck(frame, conf=0.5, classes=[1, 2])  # 在整个画面进行物体检测
             if object_results and hasattr(object_results[0], 'boxes'):
                 detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
 
@@ -941,15 +968,15 @@ def generate_rtsp_stream(link):
         if truck_frame is not None:
             ret, truck_buffer = cv2.imencode('.jpg', truck_frame)
             yield (b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n'
-                b'--truck-frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + truck_buffer.tobytes() + b'\r\n')
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n\r\n' +
+                   b'--truck-frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + truck_buffer.tobytes() + b'\r\n\r\n')
         else:
             yield (b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n\r\n')
 
-    cap.release()
-    cv2.destroyAllWindows()
+    cap.release()  # 释放视频捕捉对象
+
 
 @app.route('/get_rtsp_results', methods=['GET'])
 def get_rtsp_results():
@@ -974,6 +1001,6 @@ def get_rtsp_results():
 # 啟動應用程式
 ########################################
 if __name__ == '__main__':
-    download()
+    download_and_initialize_models()
     app.run(host="0.0.0.0", port=8080, debug=True)
 
