@@ -24,60 +24,30 @@ import gdown
 app = Flask(__name__)
 CORS(app)
 
-# def download() :
-#     folder_ids = [
-#         '1WuSyGvqkdt0o8xcMpDPMrmZ28qYK1yE8', # model
-#         '1nBZdNyU_CUixPJw6098QQFdOOC0Hr7qU']# template
-
-#     os.makedirs('model', exist_ok=True)
-#     os.makedirs(os.path.join('materials', 'template'), exist_ok=True)
-
-#     for folder_id in folder_ids:
-#         try:
-#             if folder_id == '1WuSyGvqkdt0o8xcMpDPMrmZ28qYK1yE8':
-#                 gdown.download_folder(id=folder_id, output='model', quiet=False)
-#             else:
-#                 gdown.download_folder(id=folder_id, output='static/template', quiet=False)
-#         except Exception as e:
-#             print(f"Stop download!")
-
-# # 初始化 YOLO 模型
-# model_img = YOLO('model/Iteam_object.pt')  # 圖像檢測模型
-# model_truck = YOLO('model/best.pt')  # 圖像檢測模型
-# model_wd = YOLO('model/wet_dry.pt')        # 濕/乾分類模型
-# link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
-
-def download_and_initialize_models():
-    folder_ids = [
-        '1WuSyGvqkdt0o8xcMpDPMrmZ28qYK1yE8',  # model
-        '1nBZdNyU_CUixPJw6098QQFdOOC0Hr7qU'   # template
-    ]
+def download():
+    file_url = 'https://drive.google.com/file/d/1yQElBcqM9uOJC-f33tPB7v9ITfkQh6UC/view?usp=sharing',  # model_best.pt
+        # 'https://drive.google.com/file/d/1cnKp-dDsyuXHhpe6wEHJ3gQKAMhHtAki/view?usp=sharing',   # model_check_truck.pt
+        # 'https://drive.google.com/file/d/1P3z1DTcbXPVG4hkfdUi1UzOoFj9NPRNZ/view?usp=sharing', # model_Iteam_Object.pt
+        # 'https://drive.google.com/file/d/1pKrpLiHN8IyC7gr9DiYA16rQ-50NWtsB/view?usp=sharing' # model_wet_dry.pt
 
     os.makedirs('model', exist_ok=True)
 
-    for folder_id in folder_ids:
-        try:
-            if folder_id == '1WuSyGvqkdt0o8xcMpDPMrmZ28qYK1yE8':
-                gdown.download(id=folder_id, output='model')
-            else:
-                gdown.download(id=folder_id, output='static/template')
+    # for file_url in file_urls:
+    #     try:
+    #         gdown.download(id=file_url, output='model', fuzzy=True)
+    #     except Exception as e:
+    #         print(f"下載中止！錯誤信息: {e}")
 
-        except Exception as e:
-            print(f"下載中止！錯誤信息: {e}")
-
-    # 初始化 YOLO 模型
-    if os.path.exists('model/Iteam_object.pt'):
-        model_img = YOLO('model/Iteam_object.pt')  # 圖像檢測模型
-        model_truck = YOLO('model/best.pt')  # 圖像檢測模型
-        model_wd = YOLO('model/wet_dry.pt')   # 濕/乾分類模型
-        link = 'aaa'
-    else:
-        print("模型文件不存在，無法初始化模型！")
-        return None  # 返回 None 或者引發異常
-
-    return model_img, model_truck, model_wd, link
+    try:
+        gdown.download(id=file_url, output='model', fuzzy=True)
+    except Exception as e:
+        print(f"下載中止！錯誤信息: {e}")
 
 
+model_img = YOLO('model/Iteam_object.pt')  # 圖像檢測模型
+model_truck = YOLO('model/best.pt')  # 圖像檢測模型
+model_wd = YOLO('model/wet_dry.pt')   # 濕/乾分類模型
+link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
 
 # 生成唯一檔案名稱
 # def generate_unique_filename(filename):
@@ -1001,6 +971,6 @@ def get_rtsp_results():
 # 啟動應用程式
 ########################################
 if __name__ == '__main__':
-    download_and_initialize_models()
+    download()
     app.run(host="0.0.0.0", port=8080, debug=True)
 
