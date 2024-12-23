@@ -21,86 +21,89 @@ import pandas as pd
 # google drive download package
 import gdown
 
-def download_model():
-    model_file_urls = [
-        ('https://drive.google.com/uc?id=1yQElBcqM9uOJC-f33tPB7v9ITfkQh6UC', 'best.pt'),
-        ('https://drive.google.com/uc?id=1cnKp-dDsyuXHhpe6wEHJ3gQKAMhHtAki', 'check_truck.pt'),
-        ('https://drive.google.com/uc?id=1P3z1DTcbXPVG4hkfdUi1UzOoFj9NPRNZ', 'Iteam_Object.pt'),
-        ('https://drive.google.com/uc?id=1pKrpLiHN8IyC7gr9DiYA16rQ-50NWtsB', 'wet_dry.pt')
+import os
+import gdown
+
+def download_model(folder_id):
+    # 模型文件名稱列表
+    model_file_names = [
+        'best.pt',
+        'check_truck.pt',
+        'Iteam_Object.pt',
+        'wet_dry.pt'
     ]
 
     os.makedirs('model', exist_ok=True)
 
-    for model_file_url, model_file_name in model_file_urls:
+    for model_file_name in model_file_names:
         model_output_path = os.path.join('model', model_file_name)
-        
+
+        # 檢查模型文件是否已存在
         if os.path.exists(model_output_path):
-            print(f"{model_file_name} is alive!!!")
+            print(f"{model_file_name} 已存在，跳過下載！")
             continue
 
+        # 構建下載 URL
+        model_file_url = f'https://drive.google.com/uc?id={folder_id}'
+
         try:
+            print(f"正在下載 {model_file_name}...")
             gdown.download(model_file_url, model_output_path, fuzzy=True)
             if os.path.exists(model_output_path):
-                print(f"{model_file_name} ok!!!")
+                print(f"{model_file_name} 下載成功！")
             else:
-                print(f"fail of: {model_file_name}")
+                print(f"下載失敗：{model_file_name}")
         except Exception as e:
-            print(f"error: {e}")
+            print(f"下載時發生錯誤：{e}")
 
-def download_template_video():
-    template_video_file_urls = [
-        ('https://drive.google.com/file/d/172ASGowm_Yu2AicpJBhykFZqvghvB7QV/view?usp=sharing', 'Case_1.mp4'),
-        ('https://drive.google.com/file/d/1zPyM8yhvGeJbglOqN-y_eHnc91pBd5uI/view?usp=sharing', 'Case_2.mp4'),
-        ('https://drive.google.com/file/d/1f7KgiHwewuNxXticIb2DVihAb1IAsmcl/view?usp=sharing', 'Case_3.mp4'),
-        ('https://drive.google.com/file/d/14oipJp6_9kwdYHsfgBeNy21Vl2GPJCAB/view?usp=sharing', 'Case_4.mp4'),
-        ('https://drive.google.com/file/d/1QeRQHwRoiWC03CVoTmVuwAlrNxBmfjIZ/view?usp=sharing', 'Case_5.mp4'),
-        ('https://drive.google.com/file/d/1nFvWEa9cUwC7DAY0eh4rp1r2zFpiql-s/view?usp=sharing', 'Case_6.mp4'),
-        ('https://drive.google.com/file/d/1Vutw4l8_WJ_vNpZl93PJFyghgtJdVXR7/view?usp=sharing', 'Case_7.mp4'),
-        ('https://drive.google.com/file/d/1_WdBf8iidPZa_QQoTqOIuvlq3dLYNwHo/view?usp=sharing', 'Case_8.mp4')
-    ]
+# 替換為您的資料夾 ID
+download_model('YOUR_FOLDER_ID')
 
-    os.makedirs('static/template', exist_ok=True)
 
-    for template_file_url, template_file_name in template_video_file_urls:
-        template_video_output_path = os.path.join('static/template', template_file_name)
-        
-        if os.path.exists(template_video_output_path):
-            print(f"{template_file_name} is alive!!!")
-            continue
+def download_template_video(folder_video_id):
+    output_video_path = 'static/template/videos'
+    os.makedirs(output_video_path, exist_ok=True)
 
+    if os.listdir(output_video_path):
+        print(f"'videos' 模板資料夾已存在，跳過下載！")
+    else:
         try:
-            gdown.download(template_file_url, template_video_output_path, fuzzy=True)
-            if os.path.exists(template_video_output_path):
-                print(f"{template_file_name} ok!!!")
-            else:
-                print(f"fail of: {template_file_name}")
+            print("正在下載視頻模板...")
+            gdown.download_folder(f'https://drive.google.com/drive/folders/{folder_video_id}', output=output_video_path, quiet=False)
+            print("視頻模板下載成功！")
         except Exception as e:
-            print(f"error: {e}")
+            print(f"下載視頻模板時發生錯誤：{e}")
 
 def download_template_images(folder_no_id, folder_yes_id):
-    # 創建輸出資料夾
     output_no_path = 'static/template/no'
     output_yes_path = 'static/template/yes'
     os.makedirs(output_no_path, exist_ok=True)
     os.makedirs(output_yes_path, exist_ok=True)
 
-    try:
-        # 下載 'no' 資料夾中的所有檔案
-        print("正在下載 'no' 模板圖片...")
-        gdown.download_folder(f'https://drive.google.com/drive/folders/{folder_no_id}', output=output_no_path, quiet=False)
-        
-        # 下載 'yes' 資料夾中的所有檔案
-        print("正在下載 'yes' 模板圖片...")
-        gdown.download_folder(f'https://drive.google.com/drive/folders/{folder_yes_id}', output=output_yes_path, quiet=False)
+    if os.listdir(output_no_path):
+        print(f"'no' 模板圖片資料夾已存在，跳過下載！")
+    else:
+        try:
+            print("正在下載 'no' 模板圖片...")
+            gdown.download_folder(f'https://drive.google.com/drive/folders/{folder_no_id}', output=output_no_path, quiet=False)
+            print("'no' 模板圖片下載成功！")
+        except Exception as e:
+            print(f"下載 'no' 模板圖片時發生錯誤：{e}")
 
-        print("下載成功！")
-        
-    except Exception as e:
-        print(f"錯誤：{e}")
+    # 檢查 'yes' 資料夾是否已存在
+    if os.listdir(output_yes_path):
+        print(f"'yes' 模板圖片資料夾已存在，跳過下載！")
+    else:
+        try:
+            print("正在下載 'yes' 模板圖片...")
+            gdown.download_folder(f'https://drive.google.com/drive/folders/{folder_yes_id}', output=output_yes_path, quiet=False)
+            print("'yes' 模板圖片下載成功！")
+        except Exception as e:
+            print(f"下載 'yes' 模板圖片時發生錯誤：{e}")
 
 print("start!!!")
-download_model()
-download_template_video()
+download_model('1WuSyGvqkdt0o8xcMpDPMrmZ28qYK1yE8')
+download_template_video('1sBjI5Tg3hFCipO4P5VcyjjdBUxNL2Ibr')
 download_template_images('1XbcL06-p74vzmH17V376Uj0j7GWWMv3U', '1DlDuX0eB95GeCy800XzrHjLKvWQWaGYs')
 print("finish!!!")
 
