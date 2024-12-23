@@ -2,17 +2,10 @@ FROM ultralytics/ultralytics:latest
 
 WORKDIR /app
 
+COPY . .
+
 RUN pip install --upgrade pip && \
-    pip install \
-    numpy \
-    pandas \
-    ultralytics \
-    flask \
-    opencv-python \
-    Flask-SocketIO \
-    tensorflow \
-    Flask-Mail \
-    flask-cors \
-    gdown
+    pip install numpy pandas ultralytics flask opencv-python Flask-SocketIO tensorflow Flask-Mail flask-cors gdown && \
+    rm -rf /root/.cache/pip
 
 CMD ["python3", "app.py"]
