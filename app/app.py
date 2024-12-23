@@ -26,12 +26,12 @@ import gdown
 
 def download_model(folder_model_id):
     model_output_path = 'model'
-    os.makedirs(model_output_path, exist_ok=True)
-
+    
     if os.path.exists(model_output_path):
         print(f"'model' 模板資料夾已存在，跳過下載！")
     else:
         try:
+            os.makedirs(model_output_path, exist_ok=True)
             print("正在下載model模板...")
             gdown.download_folder('https://drive.google.com/drive/folders/{folder_model_id}', model_output_path, fuzzy=True)
             print(f"model下載成功!")
@@ -40,12 +40,12 @@ def download_model(folder_model_id):
 
 def download_template_video(folder_video_id):
     output_video_path = 'static/template/videos'
-    os.makedirs(output_video_path, exist_ok=True)
-
+    
     if os.listdir(output_video_path):
         print(f"'videos' 模板資料夾已存在，跳過下載！")
     else:
         try:
+            os.makedirs(output_video_path, exist_ok=True)
             print("正在下載視頻模板...")
             gdown.download_folder(f'https://drive.google.com/drive/folders/{folder_video_id}', output=output_video_path, quiet=False)
             print("視頻模板下載成功！")
@@ -55,13 +55,12 @@ def download_template_video(folder_video_id):
 def download_template_images(folder_no_id, folder_yes_id):
     output_no_path = 'static/template/no'
     output_yes_path = 'static/template/yes'
-    os.makedirs(output_no_path, exist_ok=True)
-    os.makedirs(output_yes_path, exist_ok=True)
-
+    
     if os.listdir(output_no_path):
         print(f"'no' 模板圖片資料夾已存在，跳過下載！")
     else:
         try:
+            os.makedirs(output_no_path, exist_ok=True)
             print("正在下載 'no' 模板圖片...")
             gdown.download_folder(f'https://drive.google.com/drive/folders/{folder_no_id}', output=output_no_path, quiet=False)
             print("'no' 模板圖片下載成功！")
@@ -72,6 +71,7 @@ def download_template_images(folder_no_id, folder_yes_id):
         print(f"'yes' 模板圖片資料夾已存在，跳過下載！")
     else:
         try:
+            os.makedirs(output_yes_path, exist_ok=True)
             print("正在下載 'yes' 模板圖片...")
             gdown.download_folder(f'https://drive.google.com/drive/folders/{folder_yes_id}', output=output_yes_path, quiet=False)
             print("'yes' 模板圖片下載成功！")
