@@ -24,41 +24,19 @@ import gdown
 import os
 import gdown
 
-def download_model(folder_id):
-    # 模型文件名稱列表
-    model_file_names = [
-        'best.pt',
-        'check_truck.pt',
-        'Iteam_Object.pt',
-        'wet_dry.pt'
-    ]
-
+def download_model(folder_model_id):
+    model_output_path = os.path.join('model', model_file_name)
     os.makedirs('model', exist_ok=True)
 
-    for model_file_name in model_file_names:
-        model_output_path = os.path.join('model', model_file_name)
-
-        # 檢查模型文件是否已存在
         if os.path.exists(model_output_path):
-            print(f"{model_file_name} 已存在，跳過下載！")
-            continue
-
-        # 構建下載 URL
-        model_file_url = f'https://drive.google.com/uc?id={folder_id}'
-
-        try:
-            print(f"正在下載 {model_file_name}...")
-            gdown.download(model_file_url, model_output_path, fuzzy=True)
-            if os.path.exists(model_output_path):
-                print(f"{model_file_name} 下載成功！")
-            else:
-                print(f"下載失敗：{model_file_name}")
-        except Exception as e:
-            print(f"下載時發生錯誤：{e}")
-
-# 替換為您的資料夾 ID
-download_model('YOUR_FOLDER_ID')
-
+            print(f"'model' 模板資料夾已存在，跳過下載！")
+        else:
+            try:
+                print("正在下載model模板...")
+                gdown.download_folder('https://drive.google.com/drive/folders/{folder_model_id}', model_output_path, fuzzy=True)
+                print(f"model下載成功!")
+            except Exception as e:
+                print(f"下載時發生錯誤：{e}")
 
 def download_template_video(folder_video_id):
     output_video_path = 'static/template/videos'
