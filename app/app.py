@@ -22,7 +22,7 @@ import pandas as pd
 import gdown
 
 def download_model(folder_model_id):
-    model_output_path = './model/'
+    model_output_path = 'model'
     
     if os.path.exists(model_output_path):
         print(f"'model' 模板資料夾已存在，跳過下載！")
@@ -30,7 +30,7 @@ def download_model(folder_model_id):
         try:
             os.makedirs(model_output_path, exist_ok=True)
             print("正在下載model模板...")
-            gdown.download_folder('https://drive.google.com/drive/folders/{folder_model_id}', model_output_path, fuzzy=True)
+            gdown.download_folder(f'https://drive.google.com/drive/folders/{folder_model_id}', model_output_path, quiet=False)
             print(f"model下載成功!")
         except Exception as e:
             print(f"下載時發生錯誤：{e}")
