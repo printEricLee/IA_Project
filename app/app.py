@@ -26,7 +26,7 @@ import gdown
 
 def download_model(folder_model_id):
     model_output_path = 'model'
-    os.makedirs('model', exist_ok=True)
+    os.makedirs(model_output_path, exist_ok=True)
 
     if os.path.exists(model_output_path):
         print(f"'model' 模板資料夾已存在，跳過下載！")
@@ -622,7 +622,7 @@ def stop_processing():
 ########################################
 @app.route('/template_feed')
 def template_feed():
-    folder_path = "static/template/video/"
+    folder_path = "static/template/videos/"
     video_paths = [file for file in os.listdir(folder_path) if file.endswith(".mp4")]
     
     video_path = os.path.join(folder_path, random.choice(video_paths))
