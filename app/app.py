@@ -25,18 +25,18 @@ import os
 import gdown
 
 def download_model(folder_model_id):
-    model_output_path = os.path.join('model', model_file_name)
+    model_output_path = 'model'
     os.makedirs('model', exist_ok=True)
 
-        if os.path.exists(model_output_path):
-            print(f"'model' 模板資料夾已存在，跳過下載！")
-        else:
-            try:
-                print("正在下載model模板...")
-                gdown.download_folder('https://drive.google.com/drive/folders/{folder_model_id}', model_output_path, fuzzy=True)
-                print(f"model下載成功!")
-            except Exception as e:
-                print(f"下載時發生錯誤：{e}")
+    if os.path.exists(model_output_path):
+        print(f"'model' 模板資料夾已存在，跳過下載！")
+    else:
+        try:
+            print("正在下載model模板...")
+            gdown.download_folder('https://drive.google.com/drive/folders/{folder_model_id}', model_output_path, fuzzy=True)
+            print(f"model下載成功!")
+        except Exception as e:
+            print(f"下載時發生錯誤：{e}")
 
 def download_template_video(folder_video_id):
     output_video_path = 'static/template/videos'
@@ -68,7 +68,6 @@ def download_template_images(folder_no_id, folder_yes_id):
         except Exception as e:
             print(f"下載 'no' 模板圖片時發生錯誤：{e}")
 
-    # 檢查 'yes' 資料夾是否已存在
     if os.listdir(output_yes_path):
         print(f"'yes' 模板圖片資料夾已存在，跳過下載！")
     else:
