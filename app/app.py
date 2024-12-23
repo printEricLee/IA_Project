@@ -31,33 +31,56 @@ def download_model():
 
     os.makedirs('model', exist_ok=True)
 
-    for file_url, file_name in file_urls:
-        output_path = os.path.join('model', file_name)
+    for model_file_url, model_file_name in model_file_urls:
+        model_output_path = os.path.join('model', model_file_name)
         
-        if os.path.exists(output_path):
-            print(f"{file_name} 已存在，跳過下載。")
+        if os.path.exists(model_output_path):
+            print(f"{model_file_name} is alive!!!")
             continue
 
         try:
-            gdown.download(file_url, output_path, fuzzy=True)
-            if os.path.exists(output_path):
-                print(f"下載成功: {file_name}")
+            gdown.download(model_file_url, model_output_path, fuzzy=True)
+            if os.path.exists(model_output_path):
+                print(f"{model_file_name} ok!!!")
             else:
-                print(f"下載失敗: {file_name}")
+                print(f"fail of: {model_file_name}")
         except Exception as e:
-            print(f"下載中止！錯誤信息: {e}")
+            print(f"error: {e}")
 
 def download_template():
     template_file_urls = [
-    ('https://drive.google.com/file/d/172ASGowm_Yu2AicpJBhykFZqvghvB7QV/view?usp=sharing', 'Case_1.mp4'),
-    ('https://drive.google.com/file/d/1zPyM8yhvGeJbglOqN-y_eHnc91pBd5uI/view?usp=sharing', 'Case_2.mp4'),
-    ('https://drive.google.com/file/d/1f7KgiHwewuNxXticIb2DVihAb1IAsmcl/view?usp=sharing', 'Case_3.mp4'),
-    ('https://drive.google.com/file/d/14oipJp6_9kwdYHsfgBeNy21Vl2GPJCAB/view?usp=sharing', 'Case_4.mp4'),
-    ('https://drive.google.com/file/d/1QeRQHwRoiWC03CVoTmVuwAlrNxBmfjIZ/view?usp=sharing', 'Case_5.mp4'),
-    ('https://drive.google.com/file/d/1nFvWEa9cUwC7DAY0eh4rp1r2zFpiql-s/view?usp=sharing', 'Case_6.mp4'),
-    ('https://drive.google.com/file/d/1Vutw4l8_WJ_vNpZl93PJFyghgtJdVXR7/view?usp=sharing', 'Case_7.mp4'),
-    ('https://drive.google.com/file/d/1_WdBf8iidPZa_QQoTqOIuvlq3dLYNwHo/view?usp=sharing', 'Case_8.mp4')
-]
+        ('https://drive.google.com/file/d/172ASGowm_Yu2AicpJBhykFZqvghvB7QV/view?usp=sharing', 'Case_1.mp4'),
+        ('https://drive.google.com/file/d/1zPyM8yhvGeJbglOqN-y_eHnc91pBd5uI/view?usp=sharing', 'Case_2.mp4'),
+        ('https://drive.google.com/file/d/1f7KgiHwewuNxXticIb2DVihAb1IAsmcl/view?usp=sharing', 'Case_3.mp4'),
+        ('https://drive.google.com/file/d/14oipJp6_9kwdYHsfgBeNy21Vl2GPJCAB/view?usp=sharing', 'Case_4.mp4'),
+        ('https://drive.google.com/file/d/1QeRQHwRoiWC03CVoTmVuwAlrNxBmfjIZ/view?usp=sharing', 'Case_5.mp4'),
+        ('https://drive.google.com/file/d/1nFvWEa9cUwC7DAY0eh4rp1r2zFpiql-s/view?usp=sharing', 'Case_6.mp4'),
+        ('https://drive.google.com/file/d/1Vutw4l8_WJ_vNpZl93PJFyghgtJdVXR7/view?usp=sharing', 'Case_7.mp4'),
+        ('https://drive.google.com/file/d/1_WdBf8iidPZa_QQoTqOIuvlq3dLYNwHo/view?usp=sharing', 'Case_8.mp4')
+    ]
+
+    os.makedirs('static/template', exist_ok=True)
+
+    for template_file_url, template_file_name in template_file_urls:
+        template_output_path = os.path.join('static/template', template_file_name)
+        
+        if os.path.exists(template_output_path):
+            print(f"{template_file_name} is alive!!!")
+            continue
+
+        try:
+            gdown.download(template_file_url, template_output_path, fuzzy=True)
+            if os.path.exists(template_output_path):
+                print(f"{template_file_name} ok!!!")
+            else:
+                print(f"fail of: {template_file_name}")
+        except Exception as e:
+            print(f"error: {e}")
+
+print("start!!!")
+download_model()
+download_template()
+print("finish!!!")
 
 app = Flask(__name__)
 CORS(app)
@@ -989,6 +1012,5 @@ def get_rtsp_results():
 # 啟動應用程式
 ########################################
 if __name__ == '__main__':
-    download_model()
     app.run(host="0.0.0.0", port=8080, debug=True)
 
