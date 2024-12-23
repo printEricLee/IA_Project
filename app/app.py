@@ -30,7 +30,7 @@ def download_model(folder_model_id):
         try:
             os.makedirs(model_output_path, exist_ok=True)
             print("正在下載model模板...")
-            gdown.download_folder(f'https://drive.google.com/drive/folders/{folder_model_id}', model_output_path, quiet=False)
+            gdown.download_folder(f'https://drive.google.com/drive/folders/{folder_model_id}', output=model_output_path, quiet=False)
             print(f"model下載成功!")
         except Exception as e:
             print(f"下載時發生錯誤：{e}")
