@@ -623,7 +623,7 @@ def stop_processing():
 ########################################
 @app.route('/template_feed')
 def template_feed():
-    folder_path = "static/template/"
+    folder_path = "static/template/video/"
     video_paths = [file for file in os.listdir(folder_path) if file.endswith(".mp4")]
     
     video_path = os.path.join(folder_path, random.choice(video_paths))
