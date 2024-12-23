@@ -47,8 +47,8 @@ def download_model():
         except Exception as e:
             print(f"error: {e}")
 
-def download_template():
-    template_file_urls = [
+def download_template_video():
+    template_video_file_urls = [
         ('https://drive.google.com/file/d/172ASGowm_Yu2AicpJBhykFZqvghvB7QV/view?usp=sharing', 'Case_1.mp4'),
         ('https://drive.google.com/file/d/1zPyM8yhvGeJbglOqN-y_eHnc91pBd5uI/view?usp=sharing', 'Case_2.mp4'),
         ('https://drive.google.com/file/d/1f7KgiHwewuNxXticIb2DVihAb1IAsmcl/view?usp=sharing', 'Case_3.mp4'),
@@ -61,25 +61,46 @@ def download_template():
 
     os.makedirs('static/template', exist_ok=True)
 
-    for template_file_url, template_file_name in template_file_urls:
-        template_output_path = os.path.join('static/template', template_file_name)
+    for template_file_url, template_file_name in template_video_file_urls:
+        template_video_output_path = os.path.join('static/template', template_file_name)
         
-        if os.path.exists(template_output_path):
+        if os.path.exists(template_video_output_path):
             print(f"{template_file_name} is alive!!!")
             continue
 
         try:
-            gdown.download(template_file_url, template_output_path, fuzzy=True)
-            if os.path.exists(template_output_path):
+            gdown.download(template_file_url, template_video_output_path, fuzzy=True)
+            if os.path.exists(template_video_output_path):
                 print(f"{template_file_name} ok!!!")
             else:
                 print(f"fail of: {template_file_name}")
         except Exception as e:
             print(f"error: {e}")
 
+def download_template_image():
+    template_image_folder_no_urls = 'https://drive.google.com/drive/folders/1XbcL06-p74vzmH17V376Uj0j7GWWMv3U?usp=sharing'
+    template_image_folder_yes_urls = 'https://drive.google.com/drive/folders/1DlDuX0eB95GeCy800XzrHjLKvWQWaGYs?usp=sharing'
+
+    os.makedirs('static/template/no', exist_ok=True)
+    os.makedirs('static/template/yes', exist_ok=True)
+
+    template_image_no_output_path = os.path.join('static/template/no')
+    template_image_yes_output_path = os.path.join('static/template/yes')
+
+    try:
+        gdown.download_folder(template_image_folder_no_urls, template_image_no_output_path)
+        gdown.download_folder(template_image_folder_yes_urls, template_image_yes_output_path)
+        if os.path.exists(template_image_no_output_path):
+            print(f" ok!!!")
+        else:
+            print(f"fail!!!")
+    except Exception as e:
+        print(f"error: {e}")
+
 print("start!!!")
 download_model()
-download_template()
+download_template_video()
+download_template_image()
 print("finish!!!")
 
 app = Flask(__name__)
