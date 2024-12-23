@@ -77,30 +77,31 @@ def download_template_video():
         except Exception as e:
             print(f"error: {e}")
 
-def download_template_image():
-    template_image_folder_no_urls = 'https://drive.google.com/drive/folders/1XbcL06-p74vzmH17V376Uj0j7GWWMv3U?usp=sharing'
-    template_image_folder_yes_urls = 'https://drive.google.com/drive/folders/1DlDuX0eB95GeCy800XzrHjLKvWQWaGYs?usp=sharing'
-
-    os.makedirs('static/template/no', exist_ok=True)
-    os.makedirs('static/template/yes', exist_ok=True)
-
-    template_image_no_output_path = os.path.join('static/template/no')
-    template_image_yes_output_path = os.path.join('static/template/yes')
+def download_template_images(folder_no_id, folder_yes_id):
+    # 創建輸出資料夾
+    output_no_path = 'static/template/no'
+    output_yes_path = 'static/template/yes'
+    os.makedirs(output_no_path, exist_ok=True)
+    os.makedirs(output_yes_path, exist_ok=True)
 
     try:
-        gdown.download_folder(template_image_folder_no_urls, template_image_no_output_path)
-        gdown.download_folder(template_image_folder_yes_urls, template_image_yes_output_path)
-        if os.path.exists(template_image_no_output_path):
-            print(f" ok!!!")
-        else:
-            print(f"fail!!!")
+        # 下載 'no' 資料夾中的所有檔案
+        print("正在下載 'no' 模板圖片...")
+        gdown.download_folder(f'https://drive.google.com/drive/folders/{folder_no_id}', output=output_no_path, quiet=False)
+        
+        # 下載 'yes' 資料夾中的所有檔案
+        print("正在下載 'yes' 模板圖片...")
+        gdown.download_folder(f'https://drive.google.com/drive/folders/{folder_yes_id}', output=output_yes_path, quiet=False)
+
+        print("下載成功！")
+        
     except Exception as e:
-        print(f"error: {e}")
+        print(f"錯誤：{e}")
 
 print("start!!!")
 download_model()
 download_template_video()
-download_template_image()
+download_template_images('1XbcL06-p74vzmH17V376Uj0j7GWWMv3U', '1DlDuX0eB95GeCy800XzrHjLKvWQWaGYs')
 print("finish!!!")
 
 app = Flask(__name__)
