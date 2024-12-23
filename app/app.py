@@ -21,11 +21,8 @@ import pandas as pd
 # google drive download package
 import gdown
 
-import os
-import gdown
-
 def download_model(folder_model_id):
-    model_output_path = 'model'
+    model_output_path = './model/'
     
     if os.path.exists(model_output_path):
         print(f"'model' 模板資料夾已存在，跳過下載！")
@@ -41,7 +38,7 @@ def download_model(folder_model_id):
 def download_template_video(folder_video_id):
     output_video_path = 'static/template/videos'
     
-    if os.listdir(output_video_path):
+    if os.path.exists(output_video_path):
         print(f"'videos' 模板資料夾已存在，跳過下載！")
     else:
         try:
@@ -56,7 +53,7 @@ def download_template_images(folder_no_id, folder_yes_id):
     output_no_path = 'static/template/no'
     output_yes_path = 'static/template/yes'
     
-    if os.listdir(output_no_path):
+    if os.path.exists(output_no_path):
         print(f"'no' 模板圖片資料夾已存在，跳過下載！")
     else:
         try:
@@ -67,7 +64,7 @@ def download_template_images(folder_no_id, folder_yes_id):
         except Exception as e:
             print(f"下載 'no' 模板圖片時發生錯誤：{e}")
 
-    if os.listdir(output_yes_path):
+    if os.path.exists(output_yes_path):
         print(f"'yes' 模板圖片資料夾已存在，跳過下載！")
     else:
         try:
