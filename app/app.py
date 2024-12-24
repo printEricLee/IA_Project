@@ -646,7 +646,7 @@ def generate_template_frames(video_path):
             break
 
         # 第一步：检测卡车
-        truck_results = model_truck(frame, conf=0.5, classes=[1,2])
+        truck_results = model_truck(frame, conf=0.9)
         truck_detected = False
         truck_frame = None
         truck_box = None
