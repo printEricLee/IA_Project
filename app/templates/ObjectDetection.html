@@ -192,14 +192,14 @@
         }
       });
 
-      const yesNoBox = document.getElementById('yes-no-box');
-      if (detectedItems1.includes(2) || detectedItems1.length === 0) {
-        yesNoBox.textContent = 'No';
-        yesNoBox.style.backgroundColor = 'red';
-      } else {
-        yesNoBox.textContent = 'Ok';
-        yesNoBox.style.backgroundColor = 'green';
-      }
+      // const yesNoBox = document.getElementById('yes-no-box');
+      // if (detectedItems1.includes(2) || detectedItems1.length === 0) {
+      //   yesNoBox.textContent = 'No';
+      //   yesNoBox.style.backgroundColor = 'red';
+      // } else {
+      //   yesNoBox.textContent = 'Ok';
+      //   yesNoBox.style.backgroundColor = 'green';
+      // }
     }
 
     const img = new Image();
@@ -294,7 +294,7 @@
                       <li data-item="1" data-detection="2" class="not-detected">other</li>
                       <li data-item="0" data-detection="2" class="not-detected">close</li>
                       <li data-item="#" data-detection="3" class="not-detected">wet</li>
-                      <li id="yes-no-box">#</li>
+                      <li id="yes-no-box" style="background-color: red;">No</li>
                     </ul>
 
                   </div>
