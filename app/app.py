@@ -1,3 +1,4 @@
+# rtsp://admin:Abcd1@34@182.239.73.242:8554
 from flask import Flask, render_template, request, redirect, Response, jsonify, send_from_directory, url_for, flash, send_file
 # YOLO package
 from ultralytics import YOLO
@@ -85,7 +86,7 @@ app = Flask(__name__)
 CORS(app)
 
 model_img = YOLO('model/Iteam_Object.pt')  # 圖像檢測模型
-model_truck = YOLO('model/best.pt')  # 圖像檢測模型
+model_truck = YOLO('model/check_truck.pt')  # 圖像檢測模型
 model_wd = YOLO('model/wet_dry.pt')   # 濕/乾分類模型
 link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
 
@@ -147,9 +148,9 @@ def template_video():
 def template_image():
     return render_template('template(image).html')
 
-# print('model_truck & detection1:',model_truck.names)
-# print('model_img & detection2:',model_img.names)
-# print('model_wd & detection3:',model_wd.names)
+print('model_truck & detection1:',model_truck.names)
+print('model_img & detection2:',model_img.names)
+print('model_wd & detection3:',model_wd.names)
 
 
 
@@ -179,50 +180,50 @@ def template_image():
 
 # 配置 Flask-Mail 使用 Gmail SMTP 伺服器
 # reference : https://github.com/twtrubiks/Flask-Mail-example?tab=readme-ov-file
-# app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-# app.config['MAIL_PORT'] = 587
-# app.config['MAIL_USE_TLS'] = True
-# app.config['MAIL_USE_SSL'] = False
-# app.config['MAIL_USERNAME'] = 'xyxz55124019@gmail.com'     # Gmail 地址
-# app.config['MAIL_PASSWORD'] = 'uivh botp tcwb tybz'     # 應用程式密碼
-# app.secret_key = 'DSANO_1'
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+app.config['MAIL_USERNAME'] = 'xyxz55124019@gmail.com'     # Gmail 地址
+app.config['MAIL_PASSWORD'] = 'uivh botp tcwb tybz'     # 應用程式密碼
+app.secret_key = 'DSANO_1'
 
-# mail = Mail(app)
+mail = Mail(app)
 
-# # 發送郵件的輔助函數
-# def send_email(recipient, subject, body, image_path=None):
-#     msg = Message(subject, sender=app.config['MAIL_USERNAME'], recipients=[recipient])
-#     msg.body = body
-#     # 附加原始圖片
-#     if image_path:
-#         with app.open_resource(image_path) as fp:
-#             msg.attach(os.path.basename(image_path), 'image/jpeg', fp.read())
-#     mail.send(msg)
+# 發送郵件的輔助函數
+def send_email(recipient, subject, body, image_path=None):
+    msg = Message(subject, sender=app.config['MAIL_USERNAME'], recipients=[recipient])
+    msg.body = body
+    # 附加原始圖片
+    if image_path:
+        with app.open_resource(image_path) as fp:
+            msg.attach(os.path.basename(image_path), 'image/jpeg', fp.read())
+    mail.send(msg)
 
-# # 功能：自動發送郵件
-# def auto_send_imageResult(summary1, summary2,  image_path):
-#     recipient = 'xyxz55124019@gmail.com'
-#     body = "檢測結果:\n"
+# 功能：自動發送郵件
+def auto_send_imageResult(summary1, summary2,  image_path):
+    recipient = 'xyxz55124019@gmail.com'
+    body = "檢測結果:\n"
 
-#     try:
+    try:
 
-#         items = ['Slurry', 'dirt', 'nothing', 'other', 'stone']
-#         for item in items:
-#             status = '已檢測到' if item in summary1 else '未檢測到'
-#             body += f"{item}: {status}\n"
+        items = ['Slurry', 'dirt', 'nothing', 'other', 'stone']
+        for item in items:
+            status = '已檢測到' if item in summary1 else '未檢測到'
+            body += f"{item}: {status}\n"
 
-#         wet_status = '有' if 'wet' in summary2 else '沒有'
-#         body += f"潮濕情況檢測: {wet_status}\n"
+        wet_status = '有' if 'wet' in summary2 else '沒有'
+        body += f"潮濕情況檢測: {wet_status}\n"
 
-#         if 'wet' in summary2:
-#             body += "警告: 檢測到潮濕！\n"
+        if 'wet' in summary2:
+            body += "警告: 檢測到潮濕！\n"
 
-#     finally:
-#         if all(item not in summary1 for item in ['Slurry', 'dirt', 'nothing', 'other', 'stone']):
-#             body += f"有沒有 確實也沒有"
+    finally:
+        if all(item not in summary1 for item in ['Slurry', 'dirt', 'nothing', 'other', 'stone']):
+            body += f"有沒有 確實也沒有"
 
-#     send_email(recipient, "圖片檢測結果", body, image_path)
-#     flash('功能1結果郵件已自動發送！', 'success')
+    send_email(recipient, "圖片檢測結果", body, image_path)
+    flash('功能1結果郵件已自動發送！', 'success')
 
 
 
@@ -294,7 +295,7 @@ def imgpred():
         summary2 = summarize_results_model(results2, "Model 2") 
 
         #Send email
-        # auto_send_imageResult(summary1, summary2, original_image_path)
+        auto_send_imageResult(summary1, summary2, original_image_path)
 
         return render_template('ObjectDetection.html', summary1=summary1, image_pred1=result_path1,
                             summary2=summary2, image_pred2=result_path2, image_path=original_image_path)
@@ -864,30 +865,6 @@ frame_wd = None
 @app.route('/rtsp_feed')
 def rtsp_feed():
     return Response(generate_rtsp_stream(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-# def generate_rtsp_stream():
-#     cap = cv2.VideoCapture(link)
-
-#     global frame_obj
-#     global frame_wd
-
-#     while True:
-#         ret, frame = cap.read()
-#         if not ret:
-#             break
-
-#         frame_obj = model_img(frame, conf = 0.6)
-#         frame_wd = model_wd(frame, conf = 0.6)
-
-#         annotated_frame = frame_obj[0].plot()
-#         ret, buffer = cv2.imencode('.jpg', annotated_frame)
-#         frame_bytes = buffer.tobytes()
-
-#         yield (b'--frame\r\n'
-#                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-
-#     cap.release()
-#     cv2.destroyAllWindows()
 
 def generate_rtsp_stream():
     global truck_results
