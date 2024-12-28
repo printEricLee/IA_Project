@@ -76,11 +76,11 @@ def download_template_images(folder_no_id, folder_yes_id):
         except Exception as e:
             print(f"下載 'yes' 模板圖片時發生錯誤：{e}")
 
-# print("start!!!")
-# download_model('1WuSyGvqkdt0o8xcMpDPMrmZ28qYK1yE8')
-# download_template_video('1sBjI5Tg3hFCipO4P5VcyjjdBUxNL2Ibr')
-# download_template_images('1XbcL06-p74vzmH17V376Uj0j7GWWMv3U', '1DlDuX0eB95GeCy800XzrHjLKvWQWaGYs')
-# print("finish!!!")
+print("start!!!")
+download_model('1WuSyGvqkdt0o8xcMpDPMrmZ28qYK1yE8')
+download_template_video('1sBjI5Tg3hFCipO4P5VcyjjdBUxNL2Ibr')
+download_template_images('1XbcL06-p74vzmH17V376Uj0j7GWWMv3U', '1DlDuX0eB95GeCy800XzrHjLKvWQWaGYs')
+print("finish!!!")
 
 app = Flask(__name__)
 CORS(app)
@@ -988,10 +988,5 @@ def get_rtsp_results():
 # 啟動應用程式
 ########################################
 if __name__ == '__main__':
-    print("start!!!")
-    download_model('1WuSyGvqkdt0o8xcMpDPMrmZ28qYK1yE8')
-    download_template_video('1sBjI5Tg3hFCipO4P5VcyjjdBUxNL2Ibr')
-    download_template_images('1XbcL06-p74vzmH17V376Uj0j7GWWMv3U', '1DlDuX0eB95GeCy800XzrHjLKvWQWaGYs')
-    print("finish!!!")
     app.run(host="0.0.0.0", port=8080, debug=True)
 
