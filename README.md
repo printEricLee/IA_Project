@@ -18,7 +18,9 @@ docker compose up --build
 or
 ```bash
 docker-compose build --no-cache
-docker compose up
+```
+```bash
+docker compose up --build
 ```
 
 #### 用網站打開 http://127.0.0.1:8080
