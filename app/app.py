@@ -86,8 +86,8 @@ app = Flask(__name__)
 CORS(app)
 
 model_img = YOLO('model/Iteam_Object.pt')  # 圖像檢測模型
-model_truck = YOLO('model/check_truck.pt')  # 圖像檢測模型
-model_wd = YOLO('model/wet_dry.pt')   # 濕/乾分類模型
+model_truck = YOLO('model/truck&collection-point.pt')  # 圖像檢測模型
+model_wd = YOLO('model/wet&dry.pt')   # 濕/乾分類模型
 link = 'rtsp://admin:Abcd1@34@182.239.73.242:8554'
 
 # 生成唯一檔案名稱
