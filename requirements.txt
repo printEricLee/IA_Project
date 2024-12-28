@@ -1,7 +1,10 @@
+numpy
+pandas
 ultralytics
 flask
 opencv-python
 Flask-SocketIO
 tensorflow
-numpy
 Flask-Mail
+flask-cors
+gdown
