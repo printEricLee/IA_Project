@@ -165,7 +165,6 @@
                 const detectionList = document.getElementById('image-detection-list');
                 const items = detectionList.getElementsByTagName('li');
 
-                // Reset all items to not-detected status
                 for (let item of items) {
                     item.className = 'not-detected';
                 }
@@ -191,6 +190,10 @@
                     }
                 });
 
+                // if (detectedItems2.includes(1)) {
+                //     window.alert("Wet detected !!!");
+                // }
+
                 // const yesNoBox = document.getElementById('yes-no-box');
                 // if (detectedItems1.includes(2) || detectedItems2.includes(1)) {
                 //     yesNoBox.textContent = 'No';
@@ -198,8 +201,25 @@
                 // }
             }
         }
+
         window.onload = loadStream;
 
+        // document.getElementById('download').addEventListener('click', function () {
+        //     fetch('/template_image_feed')
+        //         .then(response => response.blob())
+        //         .then(blob => {
+        //             const url = window.URL.createObjectURL(blob);
+        //             const link = document.createElement('a');
+        //             link.href = url;
+        //             link.download = 'saved_image.png';
+
+        //             document.body.appendChild(link);
+        //             link.click();
+        //             document.body.removeChild(link);
+        //             window.URL.revokeObjectURL(url);
+        //         })
+        //         .catch(error => console.error('下載圖片失敗:', error));
+        // });
     </script>
 
 
@@ -269,14 +289,15 @@
                                         style="position: relative; height: 748px;">
 
                                         <ul id="image-detection-list" class="detection-list text-center">
-                                            <li data-item="1" data-detection="2" class="not-detected">truck</li>
-                                            <li data-item="2" data-detection="1" class="not-detected">collection point
+                                            <li data-item="2" data-detection="1" class="not-detected">slurry</li>
+                                            <li data-item="3" data-detection="1" class="not-detected">soil</li>
+                                            <li data-item="1" data-detection="1" class="not-detected">rock</li>
+                                            <li data-item="1" data-detection="2" class="not-detected">wet
                                             </li>
-                                            <li data-item="2" data-detection="2" class="not-detected">slurry</li>
-                                            <li data-item="#" data-detection="3" class="not-detected">wet</li>
                                             <li id="yes-no-box" style="background-color: red;">No</li>
                                         </ul>
 
+                                        <button id="download">Download</button>
                                     </div>
                                 </div>
                             </div>
@@ -286,6 +307,7 @@
             </div>
         </section>
     </div>
+
 </body>
 
 </html>
