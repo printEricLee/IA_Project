@@ -285,14 +285,14 @@ def imgpred():
         file.save(original_image_path)
 
         # 模型 1 檢測
-        results1 = model_img(original_image_path, conf=0.55, augment=True)
+        results1 = model_img(original_image_path, conf=0.55, augment=True, agnostic_nms=True, batch=10)
         result_image1 = results1[0].plot()
         result_image1 = Image.fromarray(result_image1)
         result_path1 = os.path.join(base_dir, 'results_model1', 'result_model1_' + unique_filename)
         result_image1.save(result_path1)
 
         # 模型 2 檢測
-        results2 = model_wd(original_image_path, conf=0.55, augment=True)
+        results2 = model_wd(original_image_path, conf=0.55, augment=True, agnostic_nms=True, batch=10)
         result_image2 = results2[0].plot()
         result_image2 = Image.fromarray(result_image2)
         result_path2 = os.path.join(base_dir, 'results_model2', 'result_model2_' + unique_filename)
@@ -411,7 +411,7 @@ def process_video(video_path, output_folder):
             break
 
         try:
-            results = model_img(frame, conf=0.55, augment=True)  # 對幀進行物體檢測
+            results = model_img(frame, conf=0.55, augment=True, agnostic_nms=True, batch=10)  # 對幀進行物體檢測
             logging.info(f"幀 {frame_number} 的檢測結果: {results}")  # 記錄檢測結果
 
             if results:  # 如果有檢測結果
@@ -477,7 +477,7 @@ def generate_video_frames(video_path):
             break
 
         # 第一步：检测卡车
-        truck_results = model_truck(frame, conf=0.55, augment=True, classes=[1,2])
+        truck_results = model_truck(frame, conf=0.55, augment=True, agnostic_nms=True, batch=10)
         truck_detected = False
         truck_frame = None
         truck_box = None
@@ -496,7 +496,7 @@ def generate_video_frames(video_path):
         detected_items = []
         # 第二步：如果检测到卡车，则在卡车内部进行物体检测
         if truck_detected and truck_frame is not None:
-            object_results = model_img(truck_frame, conf=0.55, augment=True)  # 在卡车内部进行物体检测
+            object_results = model_img(truck_frame, conf=0.55, agnostic_nms=True, batch=10)  # 在卡车内部进行物体检测
             if object_results and hasattr(object_results[0], 'boxes'):
                 detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
 
@@ -510,7 +510,7 @@ def generate_video_frames(video_path):
 
         # 第三步：如果在卡车内未检测到物体，则检测整个画面
         if not detected_items and truck_detected:
-            object_results = model_truck(frame, conf=0.55, augment=True, classes=[1,2])  # 在整个画面进行物体检测
+            object_results = model_truck(frame, conf=0.55, augment=True, agnostic_nms=True, batch=10)  # 在整个画面进行物体检测
             if object_results and hasattr(object_results[0], 'boxes'):
                 detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
 
@@ -532,7 +532,7 @@ def generate_video_frames(video_path):
 
         # 第五步：如果没有检测到卡车，则进行物体检测
         if not truck_detected:
-            object_results = model_truck(frame, conf=0.55, augment=True, classes=[1,2])  # 在整个画面进行物体检测
+            object_results = model_truck(frame, conf=0.55, augment=True, agnostic_nms=True, batch=10)  # 在整个画面进行物体检测
             if object_results and hasattr(object_results[0], 'boxes'):
                 detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
 
@@ -653,7 +653,7 @@ def generate_template_frames(video_path):
             break
 
         # 第一步：检测卡车
-        truck_results = model_truck(frame, conf=0.2, vid_stride=3) # vid_stride=1 
+        truck_results = model_truck(frame, conf=0.2, vid_stride=3, iou=0.2, agnostic_nms=True, batch=10) # vid_stride=1 
         truck_detected = False
         truck_frame = None
         truck_box = None
@@ -672,7 +672,7 @@ def generate_template_frames(video_path):
         detected_items = []
         # 第二步：如果检测到卡车，则在卡车内部进行物体检测
         if truck_detected and truck_frame is not None:
-            object_results = model_img(truck_frame, conf=0.2, vid_stride=3)  # 在卡车内部进行物体检测
+            object_results = model_img(truck_frame, conf=0.3, vid_stride=3, iou=0.2, agnostic_nms=True, batch=10)  # 在卡车内部进行物体检测
             if object_results and hasattr(object_results[0], 'boxes'):
                 detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
 
@@ -686,7 +686,7 @@ def generate_template_frames(video_path):
 
         # 第三步：如果在卡车内未检测到物体，则检测整个画面
         if not detected_items and truck_detected:
-            object_results = model_truck(frame, conf=0.2, vid_stride=3)  # 在整个画面进行物体检测
+            object_results = model_truck(frame, conf=0.3, vid_stride=3, iou=0.2, agnostic_nms=True, batch=10)  # 在整个画面进行物体检测
             if object_results and hasattr(object_results[0], 'boxes'):
                 detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
 
@@ -708,7 +708,7 @@ def generate_template_frames(video_path):
 
         # 第五步：如果没有检测到卡车，则进行物体检测
         if not truck_detected:
-            object_results = model_truck(frame, conf=0.2, vid_stride=3)  # 在整个画面进行物体检测
+            object_results = model_truck(frame, conf=0.3, vid_stride=3, iou=0.2, agnostic_nms=True, batch=10)  # 在整个画面进行物体检测
             if object_results and hasattr(object_results[0], 'boxes'):
                 detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
 
@@ -808,7 +808,7 @@ def template_image_feed():
     print("=====")
 
     image = cv2.imread(image_path)
-    result = model_img(image, conf=0.55)
+    result = model_img(image, conf=0.55, agnostic_nms=True, batch=10)
 
     result_image = result[0].plot()
 
@@ -828,7 +828,7 @@ def template_image_info():
     im_gray_mat = Image.fromarray(im_gray)
 
     result1 = model_img(image, conf=0.55)
-    result2 = model_wd(im_gray_mat, conf=0.55)
+    result2 = model_wd(im_gray_mat, conf=0.55, agnostic_nms=True, batch=10)
 
     box1 = result1[0].boxes
     box2 = result2[0].boxes
@@ -889,7 +889,7 @@ def generate_rtsp_stream():
             break
 
         # 第一步：检测卡车
-        truck_results = model_truck(frame, conf=0.55)
+        truck_results = model_truck(frame, conf=0.55, agnostic_nms=True, batch=10)
         truck_detected = False
         truck_frame = None
         truck_box = None
@@ -907,7 +907,7 @@ def generate_rtsp_stream():
         detected_items = []
         # 第二步：如果检测到卡车，则在卡车内部进行物体检测
         if truck_detected and truck_frame is not None:
-            object_results = model_img(truck_frame, conf=0.55)  # 在卡车内部进行物体检测
+            object_results = model_img(truck_frame, conf=0.55, agnostic_nms=True, batch=10)  # 在卡车内部进行物体检测
             if object_results and hasattr(object_results[0], 'boxes'):
                 detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
 
@@ -921,7 +921,7 @@ def generate_rtsp_stream():
 
         # 第三步：如果在卡车内未检测到物体，则检测整个画面
         if not detected_items and truck_detected:
-            object_results = model_truck(frame, conf=0.55)  # 在整个画面进行物体检测
+            object_results = model_truck(frame, conf=0.55, agnostic_nms=True, batch=10)  # 在整个画面进行物体检测
             if object_results and hasattr(object_results[0], 'boxes'):
                 detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
 
@@ -942,7 +942,7 @@ def generate_rtsp_stream():
 
         # 第五步：如果没有检测到卡车，则进行物体检测
         if not truck_detected:
-            object_results = model_truck(frame, conf=0.55, classes=[1, 2])  # 在整个画面进行物体检测
+            object_results = model_truck(frame, conf=0.55, agnostic_nms=True, batch=10)  # 在整个画面进行物体检测
             if object_results and hasattr(object_results[0], 'boxes'):
                 detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
 
