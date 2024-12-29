@@ -260,25 +260,28 @@
                     <div id="main-content">
                       {% if filename %}
                       <img id="upload-video" src="{{ url_for('video_feed', filename=filename) }}" alt="Uploaded video"
-                        style="width: 100%; height: auto;" />
+                        style="height: 720px;" onload="hide_word()" />
                       {% endif %}
                     </div>
 
-                    <div class="container mt-5" id="loading-message">
-                      <div class="row justify-content-between rounded">
-                        <div class="col-md-9">
+                    <div id="loading-message">
+                      <div class="container mt-5" id="loading-message">
+                        <div class="row justify-content-between rounded">
+                          <div class="col-md-9">
 
-                          <form action="{{ url_for('vidpred') }}" method="post" enctype="multipart/form-data"
-                            class="card shadow p-3 mb-5 bg-white rounded" id="loading-message">
-                            <div class="card-body">
-                              <h2 class="text-center">上傳圖片或視頻</h2>
-                              <p class="card-text text-center">請選擇您想要上傳的文件</p>
-                              <input type="file" name="video" class="form-control-file" id="inputFile" accept="video/*">
-                              <button class="btn btn-primary btn-block mt-3 w-100" type="submit"
-                                onclick="loadStream(); hide_word()">上傳</button>
-                            </div>
-                          </form>
+                            <form action="{{ url_for('vidpred') }}" method="post" enctype="multipart/form-data"
+                              class="card shadow p-3 mb-5 bg-white rounded">
+                              <div class="card-body">
+                                <h2 class="text-center">上傳圖片或視頻</h2>
+                                <p class="card-text text-center">請選擇您想要上傳的文件</p>
+                                <input type="file" name="video" class="form-control-file" id="inputFile"
+                                  accept="video/*">
+                                <button class="btn btn-primary btn-block mt-3 w-100" type="submit"
+                                  onclick="loadStream()">上傳</button>
+                              </div>
+                            </form>
 
+                          </div>
                         </div>
                       </div>
                     </div>
