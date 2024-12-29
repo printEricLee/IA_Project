@@ -672,7 +672,7 @@ def generate_template_frames(video_path):
         detected_items = []
         # 第二步：如果检测到卡车，则在卡车内部进行物体检测
         if truck_detected and truck_frame is not None:
-            object_results = model_img(truck_frame, conf=0.3, vid_stride=3, iou=0.2, agnostic_nms=True, batch=10)  # 在卡车内部进行物体检测
+            object_results = model_img(truck_frame, conf=0.6, iou=0.2, agnostic_nms=True, batch=10)  # 在卡车内部进行物体检测
             if object_results and hasattr(object_results[0], 'boxes'):
                 detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
 
