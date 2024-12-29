@@ -411,7 +411,7 @@ def process_video(video_path, output_folder):
             break
 
         try:
-            results = model_img(frame, conf=0.55, augment=True, agnostic_nms=True, batch=10)  # 對幀進行物體檢測
+            results = model_img(frame, conf=0.2, iou=0.2, agnostic_nms=True)  # 對幀進行物體檢測
             logging.info(f"幀 {frame_number} 的檢測結果: {results}")  # 記錄檢測結果
 
             if results:  # 如果有檢測結果
@@ -477,7 +477,7 @@ def generate_video_frames(video_path):
             break
 
         # 第一步：检测卡车
-        truck_results = model_truck(frame, conf=0.55, augment=True, agnostic_nms=True, batch=10)
+        truck_results = model_truck(frame, conf=0.2, iou=0.2, agnostic_nms=True)
         truck_detected = False
         truck_frame = None
         truck_box = None
@@ -653,7 +653,7 @@ def generate_template_frames(video_path):
             break
 
         # 第一步：检测卡车
-        truck_results = model_truck(frame, conf=0.2, vid_stride=3, iou=0.2, agnostic_nms=True, batch=10) # vid_stride=1 
+        truck_results = model_truck(frame, conf=0.2, iou=0.2, agnostic_nms=True) # vid_stride=1 
         truck_detected = False
         truck_frame = None
         truck_box = None
@@ -672,7 +672,7 @@ def generate_template_frames(video_path):
         detected_items = []
         # 第二步：如果检测到卡车，则在卡车内部进行物体检测
         if truck_detected and truck_frame is not None:
-            object_results = model_img(truck_frame, conf=0.6, iou=0.2, agnostic_nms=True, batch=10)  # 在卡车内部进行物体检测
+            object_results = model_img(truck_frame, conf=0.4, iou=0.2, agnostic_nms=True, batch=10)  # 在卡车内部进行物体检测
             if object_results and hasattr(object_results[0], 'boxes'):
                 detected_items = [object_results[0].names[int(box[5])] for box in object_results[0].boxes.data]
 
