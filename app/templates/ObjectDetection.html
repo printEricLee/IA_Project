@@ -138,10 +138,12 @@
 
     function loadStream() {
       document.getElementById("loading").style.display = "block";
+      document.getElementById("content").style.display = "none";
     }
 
     function hideStream() {
       document.getElementById("loading").style.display = "none";
+      document.getElementById("content").style.display = "block";
     }
 
     function fetchDetectionResults() {
@@ -207,6 +209,7 @@
 
     img.onload = function () {
       fetchDetectionResults(); // 在頁面加載時獲取檢測結果
+      hideStream();
     };
 
     document.getElementById('download').addEventListener('click', function () {
@@ -270,20 +273,21 @@
                     {% endif %}
 
                     <div class="container mt-5" id="loading-message">
-                      <!-- <div class="row justify-content-between rounded"> -->
-                      <!-- <div class="col-md-9"> -->
-                      <form action="/imgpred" method="post" enctype="multipart/form-data"
-                        class="card shadow p-3 mb-5 bg-white rounded" id="loading-message">
-                        <div class="card-body">
-                          <h2 class="text-center">上傳圖片或視頻</h2>
-                          <p class="card-text text-center">請選擇您想要上傳的文件</p>
-                          <input type="file" name="image" class="form-control-file" id="inputFile" accept="image/*"
-                            required>
-                          <button class="btn btn-primary btn-block mt-3 w-100" type="submit"
-                            onclick="loadStream()">上傳</button>
+                      <div class="row justify-content-between rounded">
+                        <div class="col-md-9">
+                          <form action="/imgpred" method="post" enctype="multipart/form-data"
+                            class="card shadow p-3 mb-5 bg-white rounded" id="loading-message">
+                            <div class="card-body">
+                              <h2 class="text-center">上傳圖片或視頻</h2>
+                              <p class="card-text text-center">請選擇您想要上傳的文件</p>
+                              <input type="file" name="image" class="form-control-file" id="inputFile" accept="image/*"
+                                required>
+                              <button class="btn btn-primary btn-block mt-3 w-100" type="submit"
+                                onclick="loadStream()">上傳</button>
+                            </div>
+                          </form>
                         </div>
-                      </form>
-                      <!-- </div> -->
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -302,7 +306,7 @@
 
               <div class="card-body">
                 <div class="tab-content p-0">
-                  <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 769px;">
+                  <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 750px;">
 
                     <ul id="image-detection-list" class="detection-list text-center">
                       <li data-item="2" data-detection="1" class="not-detected">slurry</li>
@@ -313,7 +317,7 @@
                       <li id="yes-no-box" style="background-color: red;">No</li>
                     </ul>
 
-                    <button id="download">Download</button>
+                    <button id="download" class="btn btn-info">Download</button>
 
                   </div>
                 </div>
