@@ -161,46 +161,45 @@
                         }
                     })
             };
+        }
+        function updateDetectionList(detections1, detections2) {
+            const detectionList = document.getElementById('image-detection-list');
+            const items = detectionList.getElementsByTagName('li');
 
-            function updateDetectionList(detections1, detections2) {
-                const detectionList = document.getElementById('image-detection-list');
-                const items = detectionList.getElementsByTagName('li');
-
-                for (let item of items) {
-                    item.className = 'not-detected';
-                }
-
-                let detectedItems1 = [];
-                let detectedItems2 = [];
-
-                // Update detections1
-                detections1.forEach(detection => {
-                    const item = detectionList.querySelector(`li[data-item="${detection}"][data-detection="1"]`);
-                    if (item) {
-                        item.className = 'detected';
-                        detectedItems1.push(detection);
-                    }
-                });
-
-                // Update detections2
-                detections2.forEach(detection => {
-                    const item = detectionList.querySelector(`li[data-item="${detection}"][data-detection="2"]`);
-                    if (item) {
-                        item.className = 'detected';
-                        detectedItems2.push(detection);
-                    }
-                });
-
-                // if (detectedItems2.includes(1)) {
-                //     window.alert("Wet detected !!!");
-                // }
-
-                // const yesNoBox = document.getElementById('yes-no-box');
-                // if (detectedItems1.includes(2) || detectedItems2.includes(1)) {
-                //     yesNoBox.textContent = 'No';
-                //     yesNoBox.style.backgroundColor = 'red';
-                // }
+            for (let item of items) {
+                item.className = 'not-detected';
             }
+
+            let detectedItems1 = [];
+            let detectedItems2 = [];
+
+            // Update detections1
+            detections1.forEach(detection => {
+                const item = detectionList.querySelector(`li[data-item="${detection}"][data-detection="1"]`);
+                if (item) {
+                    item.className = 'detected';
+                    detectedItems1.push(detection);
+                }
+            });
+
+            // Update detections2
+            detections2.forEach(detection => {
+                const item = detectionList.querySelector(`li[data-item="${detection}"][data-detection="2"]`);
+                if (item) {
+                    item.className = 'detected';
+                    detectedItems2.push(detection);
+                }
+            });
+
+            // if (detectedItems2.includes(1)) {
+            //     window.alert("Wet detected !!!");
+            // }
+
+            // const yesNoBox = document.getElementById('yes-no-box');
+            // if (detectedItems1.includes(2) || detectedItems2.includes(1)) {
+            //     yesNoBox.textContent = 'No';
+            //     yesNoBox.style.backgroundColor = 'red';
+            // }
         }
 
         window.onload = loadStream;
